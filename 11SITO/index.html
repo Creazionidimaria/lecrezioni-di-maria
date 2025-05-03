@@ -46,13 +46,11 @@
       </div>
     </nav>
 
-    <!-- Sezione descrizione -->
     <div v-if="view==='descrizione'">
       <h2 class="text-2xl font-bold mb-4">Descrizione</h2>
       <p>Benvenuti! Qui trovate borse, cappellini e sciarpe uniche fatte a mano da Maria. 💖🧶</p>
     </div>
 
-    <!-- Sezione Home con articoli -->
     <div v-if="view==='home'">
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div v-for="(articolo, index) in articoli" :key="index" class="bg-white p-4 rounded-lg shadow">
@@ -80,7 +78,6 @@
       </div>
     </div>
 
-    <!-- Carrello -->
     <div v-if="view==='carrello'">
       <h2 class="text-2xl font-bold mb-4">🛍️ Il tuo carrello</h2>
       <div v-if="carrello.length === 0">Il carrello è vuoto.</div>
@@ -109,160 +106,32 @@
         view: 'home',
         coloriDisponibili: ['Rosso', 'Blu', 'Verde', 'Giallo', 'Nero'],
         articoli: [
-          {
-            nome: `Articolo 1`,
+          { nome: 'Articolo 1', descrizione: 'Un bellissimo articolo fatto a mano. ✨', prezzo: 0.01, colore: '', foto: Array.from({ length: 5}, (_,j)=>`immagini/articolo1_foto${j+1}.jpg`), fotoIndex: 0 },
+          { nome: 'Articolo 2', descrizione: 'Un bellissimo articolo fatto a mano. ✨', prezzo: 0.01, colore: '', foto: Array.from({ length: 5}, (_,j)=>`immagini/articolo2_foto${j+1}.jpg`), fotoIndex: 0 },
+          ...Array.from({ length: 8 }, (_,i)=>({
+            nome: `Articolo ${i+3}`,
             descrizione: 'Un bellissimo articolo fatto a mano. ✨',
-            prezzo: 0.01,
+            prezzo: 20 + i*2,
             colore: '',
-            foto: Array.from({ length: 5 }, (_, j) => `immagini/articolo1_foto${j + 1}.jpg`),
+            foto: Array.from({ length: 5}, (_,j)=>`immagini/articolo${i+3}_foto${j+1}.jpg`),
             fotoIndex: 0
-          },
-          {
-            nome: `Articolo 2`,
-            descrizione: 'Un bellissimo articolo fatto a mano. ✨',
-            prezzo: 0.01,
-            colore: '',
-            foto: Array.from({ length: 5 }, (_, j) => `immagini/articolo2_foto${j + 1}.jpg`),
-            fotoIndex: 0
-          },
-          {
-            nome: `Articolo 3`,
-            descrizione: 'Un bellissimo articolo fatto a mano. ✨',
-            prezzo: 20.00,
-            colore: '',
-            foto: Array.from({ length: 5 }, (_, j) => `immagini/articolo3_foto${j + 1}.jpg`),
-            fotoIndex: 0
-          },
-          {
-            nome: `Articolo 4`,
-            descrizione: 'Un bellissimo articolo fatto a mano. ✨',
-            prezzo: 22.00,
-            colore: '',
-            foto: Array.from({ length: 5 }, (_, j) => `immagini/articolo4_foto${j + 1}.jpg`),
-            fotoIndex: 0
-          },
-          {
-            nome: `Articolo 5`,
-            descrizione: 'Un bellissimo articolo fatto a mano. ✨',
-            prezzo: 24.00,
-            colore: '',
-            foto: Array.from({ length: 5 }, (_, j) => `immagini/articolo5_foto${j + 1}.jpg`),
-            fotoIndex: 0
-          },
-          {
-            nome: `Articolo 6`,
-            descrizione: 'Un bellissimo articolo fatto a mano. ✨',
-            prezzo: 26.00,
-            colore: '',
-            foto: Array.from({ length: 5 }, (_, j) => `immagini/articolo6_foto${j + 1}.jpg`),
-            fotoIndex: 0
-          },
-          {
-            nome: `Articolo 7`,
-            descrizione: 'Un bellissimo articolo fatto a mano. ✨',
-            prezzo: 28.00,
-            colore: '',
-            foto: Array.from({ length: 5 }, (_, j) => `immagini/articolo7_foto${j + 1}.jpg`),
-            fotoIndex: 0
-          },
-          {
-            nome: `Articolo 8`,
-            descrizione: 'Un bellissimo articolo fatto a mano. ✨',
-            prezzo: 30.00,
-            colore: '',
-            foto: Array.from({ length: 5 }, (_, j) => `immagini/articolo8_foto${j + 1}.jpg`),
-            fotoIndex: 0
-          },
-          {
-            nome: `Articolo 9`,
-            descrizione: 'Un bellissimo articolo fatto a mano. ✨',
-            prezzo: 32.00,
-            colore: '',
-            foto: Array.from({ length: 5 }, (_, j) => `immagini/articolo9_foto${j + 1}.jpg`),
-            fotoIndex: 0
-          },
-          {
-            nome: `Articolo 10`,
-            descrizione: 'Un bellissimo articolo fatto a mano. ✨',
-            prezzo: 34.00,
-            colore: '',
-            foto: Array.from({ length: 5 }, (_, j) => `immagini/articolo10_foto${j + 1}.jpg`),
-            fotoIndex: 0
-          }
+          }))
         ],
         carrello: []
       },
       computed: {
-        totale() {
-          return this.carrello.reduce((somma, art) => somma + art.prezzo, 0);
-        }
+        totale() { return this.carrello.reduce((s,a)=>s+a.prezzo,0); }
       },
       methods: {
-        nextFoto(index) {
-          const articolo = this.articoli[index];
-          articolo.fotoIndex = (articolo.fotoIndex + 1) % articolo.foto.length;
-        },
-        prevFoto(index) {
-          const articolo = this.articoli[index];
-          articolo.fotoIndex = (articolo.fotoIndex - 1 + articolo.foto.length) % articolo.foto.length;
-        },
-        aggiungiAlCarrello(articolo) {
-          if (!articolo.colore) {
-            Swal.fire('Seleziona un colore prima di aggiungere al carrello!');
-            return;
-          }
-          this.carrello.push({ ...articolo });
-          Swal.fire({
-            title: '✅ Aggiunto al carrello!',
-            toast: true,
-            timer: 1200,
-            position: 'top-end',
-            showConfirmButton: false
-          });
-        },
-        rimuoviDalCarrello(index) {
-          this.carrello.splice(index, 1);
-        },
-        compraSubito(articolo) {
-          if (!articolo.colore) {
-            Swal.fire('Seleziona un colore prima di comprare!');
-            return;
-          }
-          this.view = 'carrello';
-          this.carrello = [articolo];
-        },
-        inviaOrdineWhatsApp() {
-          const lista = this.carrello.map(a => `${a.nome} (${a.colore}) - ${a.prezzo.toFixed(2)}€`).join('\n');
-          const messaggio = encodeURIComponent(`Nuovo ordine:\n${lista}\nTotale: ${this.totale.toFixed(2)} €`);
-          const numero = '393398952949';
-          window.open(`https://wa.me/${numero}?text=${messaggio}`, '_blank');
-        }
+        nextFoto(i){ const a=this.articoli[i]; a.fotoIndex=(a.fotoIndex+1)%a.foto.length; },
+        prevFoto(i){ const a=this.articoli[i]; a.fotoIndex=(a.fotoIndex-1+a.foto.length)%a.foto.length; },
+        aggiungiAlCarrello(a){ if(!a.colore)return Swal.fire('Seleziona un colore prima!'); this.carrello.push({...a}); Swal.fire({title:'✅ Aggiunto!',toast:true,timer:1200,position:'top-end',showConfirmButton:false}); },
+        rimuoviDalCarrello(i){this.carrello.splice(i,1)},
+        compraSubito(a){ if(!a.colore)return Swal.fire('Seleziona un colore prima!'); this.carrello=[a]; this.view='carrello'; },
+        inviaOrdineWhatsApp(){ const lista=this.carrello.map(a=>`${a.nome} (${a.colore}) - ${a.prezzo.toFixed(2)}€`).join('\n'); const msg=encodeURIComponent(`Nuovo ordine:\n${lista}\nTotale: ${this.totale.toFixed(2)} €`); window.open(`https://wa.me/393398952949?text=${msg}`,'_blank'); }
       },
       watch: {
-        view(newView) {
-          if (newView === 'carrello') {
-            this.$nextTick(() => {
-              document.getElementById('paypal-button-container').innerHTML = '';
-              paypal.Buttons({
-                createOrder: (data, actions) => {
-                  return actions.order.create({
-                    purchase_units: [{
-                      amount: { value: this.totale.toFixed(2) }
-                    }]
-                  });
-                },
-                onApprove: (data, actions) => {
-                  return actions.order.capture().then((details) => {
-                    Swal.fire('✅ Pagamento riuscito!', `Grazie ${details.payer.name.given_name}!`, 'success');
-                    this.inviaOrdineWhatsApp();
-                    this.carrello = [];
-                    this.view = 'home';
-                  });
-                }
-              }).render('#paypal-button-container');
-            });
-          }
-        }
+        view(n){ if(n==='carrello'){ this.$nextTick(()=>{ document.getElementById('paypal-button-container').innerHTML=''; paypal.Buttons({ createOrder:(d,a)=>a.order.create({purchase_units:[{amount:{value:this.totale.toFixed(2)}}]}), onApprove:(d,a)=>a.order.capture().then(()=>{ Swal.fire('✅ Pagamento riuscito!','','success'); this.inviaOrdineWhatsApp(); this.carrello=[]; this.view='home'; }) }).render('#paypal-button-container'); }); }}
       }
     });
   </script>
