@@ -4,9 +4,15 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Le Creazioni di Maria 🧶</title>
+
+  <!-- SDK PayPal -->
+  <script src="https://www.paypal.com/sdk/js?client-id=AfWXl84QOTxPwE7Bth3rw2orROpDzNtzwlxZfVcQlOUQlXFpsyWw1CIj8c03epmKYxwY91vjvMmy3eky&currency=EUR"></script>
+
+  <!-- Vue, SweetAlert, Tailwind -->
   <script src="https://cdn.jsdelivr.net/npm/vue@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+
   <style>
     .carousel img {
       width: 100%;
@@ -30,145 +36,235 @@
   </style>
 </head>
 <body class="bg-pink-50 font-sans">
-<div id="app" class="p-4">
-  <nav class="bg-pink-200 p-4 rounded-lg shadow mb-6 flex justify-between">
-    <div class="text-xl font-bold">🧵 Le Creazioni di Maria</div>
-    <div>
-      <button class="mr-4" @click="view='home'">🏠 Home</button>
-      <button class="mr-4" @click="view='carrello'">🛒 Carrello ({{ carrello.length }})</button>
-      <button @click="view='descrizione'">📜 Descrizione</button>
+  <div id="app" class="p-4">
+    <nav class="bg-pink-200 p-4 rounded-lg shadow mb-6 flex justify-between">
+      <div class="text-xl font-bold">🧵 Le Creazioni di Maria</div>
+      <div>
+        <button class="mr-4" @click="view='home'">🏠 Home</button>
+        <button class="mr-4" @click="view='carrello'">🛒 Carrello ({{ carrello.length }})</button>
+        <button @click="view='descrizione'">📜 Descrizione</button>
+      </div>
+    </nav>
+
+    <!-- Sezione descrizione -->
+    <div v-if="view==='descrizione'">
+      <h2 class="text-2xl font-bold mb-4">Descrizione</h2>
+      <p>Benvenuti! Qui trovate borse, cappellini e sciarpe uniche fatte a mano da Maria. 💖🧶</p>
     </div>
-  </nav>
 
-  <div v-if="view==='descrizione'">
-    <h2 class="text-2xl font-bold mb-4">Descrizione</h2>
-    <p>Scrivi qui la descrizione del negozio...</p>
-  </div>
+    <!-- Sezione Home con articoli -->
+    <div v-if="view==='home'">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div v-for="(articolo, index) in articoli" :key="index" class="bg-white p-4 rounded-lg shadow">
+          <div class="carousel">
+            <img :src="articolo.foto[articolo.fotoIndex]" :alt="articolo.nome" class="rounded" />
+            <span class="arrow left" @click="prevFoto(index)">&#8592;</span>
+            <span class="arrow right" @click="nextFoto(index)">&#8594;</span>
+          </div>
+          <h3 class="text-xl font-semibold mt-2">👜 {{ articolo.nome }}</h3>
+          <p class="text-gray-600">{{ articolo.descrizione }}</p>
+          <p class="text-lg font-bold">💶 {{ articolo.prezzo.toFixed(2) }} €</p>
 
-  <div v-if="view==='home'">
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
-      <div v-for="(articolo, index) in articoli" :key="index" class="bg-white p-4 rounded-lg shadow">
-        <div class="carousel">
-          <img :src="articolo.foto[articolo.fotoIndex]" :alt="articolo.nome" class="rounded" />
-          <span class="arrow left" @click="prevFoto(index)">&#8592;</span>
-          <span class="arrow right" @click="nextFoto(index)">&#8594;</span>
-        </div>
-        <h3 class="text-xl font-semibold mt-2">👜 {{ articolo.nome }}</h3>
-        <p class="text-gray-600">{{ articolo.descrizione }}</p>
-        <p class="text-lg font-bold">💶 {{ articolo.prezzo.toFixed(2) }} €</p>
+          <label class="block mt-2">🎨 Scegli un colore:
+            <select v-model="articolo.colore" class="mt-1 p-2 border rounded w-full">
+              <option disabled value="">Seleziona colore</option>
+              <option v-for="colore in coloriDisponibili" :key="colore" :value="colore">{{ colore }}</option>
+            </select>
+          </label>
 
-        <label class="block mt-2">🎨 Scegli un colore:
-          <select v-model="articolo.colore" class="mt-1 p-2 border rounded w-full">
-            <option disabled value="">Seleziona colore</option>
-            <option v-for="colore in coloriDisponibili" :key="colore" :value="colore">{{ colore }}</option>
-          </select>
-        </label>
-
-        <div class="mt-4 flex gap-2">
-          <button class="bg-green-400 hover:bg-green-500 text-white px-4 py-2 rounded transition-all" @click="aggiungiAlCarrello(articolo)">➕ Aggiungi</button>
-          <button class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded shadow-md transform transition-transform hover:scale-105" @click="compraSubito(articolo)">💳 Compra</button>
+          <div class="mt-4 flex gap-2">
+            <button class="bg-green-400 hover:bg-green-500 text-white px-4 py-2 rounded" @click="aggiungiAlCarrello(articolo)">➕ Aggiungi</button>
+            <button class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded" @click="compraSubito(articolo)">💳 Compra</button>
+          </div>
         </div>
       </div>
     </div>
-  </div>
 
-  <div v-if="view==='carrello'">
-    <h2 class="text-2xl font-bold mb-4">🛍️ Il tuo carrello</h2>
-    <div v-if="carrello.length === 0">Il carrello è vuoto.</div>
-    <div v-else>
-      <ul>
-        <li v-for="(item, index) in carrello" :key="index" class="mb-2 p-2 border-b">
-          {{ item.nome }} - {{ item.prezzo.toFixed(2) }} € - Colore: {{ item.colore }}
-          <button class="text-red-500 ml-4" @click="rimuoviDalCarrello(index)">❌ Rimuovi</button>
-        </li>
-      </ul>
-      <p class="mt-4 text-lg font-semibold">Totale: {{ totale.toFixed(2) }} €</p>
-      <button class="mt-4 bg-yellow-500 text-white px-6 py-3 rounded-lg hover:bg-yellow-600 text-xl" @click="pagaCarrello">💸 Procedi al pagamento</button>
+    <!-- Carrello -->
+    <div v-if="view==='carrello'">
+      <h2 class="text-2xl font-bold mb-4">🛍️ Il tuo carrello</h2>
+      <div v-if="carrello.length === 0">Il carrello è vuoto.</div>
+      <div v-else>
+        <ul>
+          <li v-for="(item, index) in carrello" :key="index" class="mb-2 p-2 border-b">
+            {{ item.nome }} - {{ item.prezzo.toFixed(2) }} € - Colore: {{ item.colore }}
+            <button class="text-red-500 ml-4" @click="rimuoviDalCarrello(index)">❌ Rimuovi</button>
+          </li>
+        </ul>
+        <p class="mt-4 text-lg font-semibold">Totale: {{ totale.toFixed(2) }} €</p>
+        <div id="paypal-button-container" class="mt-4"></div>
+      </div>
     </div>
+
+    <footer class="mt-10 bg-pink-200 p-4 text-center rounded-lg">
+      <p>📞 Tel: +39 3398952949 | ✉️ Email: mariacreazioni@email.com</p>
+      <p>💳 Pagamenti accettati: PayPal, Carta di credito</p>
+    </footer>
   </div>
 
-  <footer class="mt-10 bg-pink-200 p-4 text-center rounded-lg">
-    <p>📞 Tel: +39 123 456 7890 | ✉️ Email: mariacreazioni@email.com</p>
-    <p>💳 Pagamenti accettati: PayPal, Carta di credito</p>
-  </footer>
-</div>
-
-<script>
-  new Vue({
-    el: '#app',
-    data: {
-      view: 'home',
-      coloriDisponibili: ['Rosso', 'Blu', 'Verde', 'Giallo', 'Nero'],
-      articoli: Array.from({ length: 10 }, (_, i) => ({
-        nome: `Articolo ${i + 1}`,
-        descrizione: 'Un bellissimo articolo fatto a mano. ✨',
-        prezzo: 20 + i * 2,
-        colore: '',
-        foto: Array.from({ length: 5 }, (_, j) => `immagini/articolo${i + 1}_foto${j + 1}.jpg`),
-        fotoIndex: 0
-      })),
-      carrello: []
-    },
-    computed: {
-      totale() {
-        return this.carrello.reduce((somma, art) => somma + art.prezzo, 0);
-      }
-    },
-    methods: {
-      nextFoto(index) {
-        const articolo = this.articoli[index];
-        articolo.fotoIndex = (articolo.fotoIndex + 1) % articolo.foto.length;
+  <script>
+    new Vue({
+      el: '#app',
+      data: {
+        view: 'home',
+        coloriDisponibili: ['Rosso', 'Blu', 'Verde', 'Giallo', 'Nero'],
+        articoli: [
+          {
+            nome: `Articolo 1`,
+            descrizione: 'Un bellissimo articolo fatto a mano. ✨',
+            prezzo: 0.01,
+            colore: '',
+            foto: Array.from({ length: 5 }, (_, j) => `immagini/articolo1_foto${j + 1}.jpg`),
+            fotoIndex: 0
+          },
+          {
+            nome: `Articolo 2`,
+            descrizione: 'Un bellissimo articolo fatto a mano. ✨',
+            prezzo: 0.01,
+            colore: '',
+            foto: Array.from({ length: 5 }, (_, j) => `immagini/articolo2_foto${j + 1}.jpg`),
+            fotoIndex: 0
+          },
+          {
+            nome: `Articolo 3`,
+            descrizione: 'Un bellissimo articolo fatto a mano. ✨',
+            prezzo: 20.00,
+            colore: '',
+            foto: Array.from({ length: 5 }, (_, j) => `immagini/articolo3_foto${j + 1}.jpg`),
+            fotoIndex: 0
+          },
+          {
+            nome: `Articolo 4`,
+            descrizione: 'Un bellissimo articolo fatto a mano. ✨',
+            prezzo: 22.00,
+            colore: '',
+            foto: Array.from({ length: 5 }, (_, j) => `immagini/articolo4_foto${j + 1}.jpg`),
+            fotoIndex: 0
+          },
+          {
+            nome: `Articolo 5`,
+            descrizione: 'Un bellissimo articolo fatto a mano. ✨',
+            prezzo: 24.00,
+            colore: '',
+            foto: Array.from({ length: 5 }, (_, j) => `immagini/articolo5_foto${j + 1}.jpg`),
+            fotoIndex: 0
+          },
+          {
+            nome: `Articolo 6`,
+            descrizione: 'Un bellissimo articolo fatto a mano. ✨',
+            prezzo: 26.00,
+            colore: '',
+            foto: Array.from({ length: 5 }, (_, j) => `immagini/articolo6_foto${j + 1}.jpg`),
+            fotoIndex: 0
+          },
+          {
+            nome: `Articolo 7`,
+            descrizione: 'Un bellissimo articolo fatto a mano. ✨',
+            prezzo: 28.00,
+            colore: '',
+            foto: Array.from({ length: 5 }, (_, j) => `immagini/articolo7_foto${j + 1}.jpg`),
+            fotoIndex: 0
+          },
+          {
+            nome: `Articolo 8`,
+            descrizione: 'Un bellissimo articolo fatto a mano. ✨',
+            prezzo: 30.00,
+            colore: '',
+            foto: Array.from({ length: 5 }, (_, j) => `immagini/articolo8_foto${j + 1}.jpg`),
+            fotoIndex: 0
+          },
+          {
+            nome: `Articolo 9`,
+            descrizione: 'Un bellissimo articolo fatto a mano. ✨',
+            prezzo: 32.00,
+            colore: '',
+            foto: Array.from({ length: 5 }, (_, j) => `immagini/articolo9_foto${j + 1}.jpg`),
+            fotoIndex: 0
+          },
+          {
+            nome: `Articolo 10`,
+            descrizione: 'Un bellissimo articolo fatto a mano. ✨',
+            prezzo: 34.00,
+            colore: '',
+            foto: Array.from({ length: 5 }, (_, j) => `immagini/articolo10_foto${j + 1}.jpg`),
+            fotoIndex: 0
+          }
+        ],
+        carrello: []
       },
-      prevFoto(index) {
-        const articolo = this.articoli[index];
-        articolo.fotoIndex = (articolo.fotoIndex - 1 + articolo.foto.length) % articolo.foto.length;
-      },
-      aggiungiAlCarrello(articolo) {
-        if (!articolo.colore) {
-          Swal.fire('Seleziona un colore prima di aggiungere al carrello!');
-          return;
+      computed: {
+        totale() {
+          return this.carrello.reduce((somma, art) => somma + art.prezzo, 0);
         }
-        this.carrello.push({ ...articolo });
-        Swal.fire({
-          title: '✅ Aggiunto al carrello!',
-          showConfirmButton: false,
-          timer: 1000,
-          toast: true,
-          position: 'top-end'
-        });
       },
-      rimuoviDalCarrello(index) {
-        this.carrello.splice(index, 1);
-        Swal.fire('🗑️ Articolo rimosso dal carrello');
-      },
-      compraSubito(articolo) {
-        if (!articolo.colore) {
-          Swal.fire('Seleziona un colore prima di comprare!');
-          return;
-        }
-        this.simulaPagamento([articolo]);
-      },
-      pagaCarrello() {
-        if (this.carrello.length === 0) return;
-        this.simulaPagamento(this.carrello);
-        this.carrello = [];
-      },
-      simulaPagamento(articoli) {
-        Swal.fire({
-          title: '💳 Pagamento con PayPal/Carta...',
-          text: 'Simulazione in corso...',
-          icon: 'info',
-          showConfirmButton: false,
-          timer: 2000
-        }).then(() => {
-          const lista = articoli.map(a => `${a.nome} (${a.colore}) - ${a.prezzo.toFixed(2)}€`).join('\n');
-          const messaggio = encodeURIComponent(`Nuovo ordine:\n${lista}`);
-          const numero = '391234567890';
+      methods: {
+        nextFoto(index) {
+          const articolo = this.articoli[index];
+          articolo.fotoIndex = (articolo.fotoIndex + 1) % articolo.foto.length;
+        },
+        prevFoto(index) {
+          const articolo = this.articoli[index];
+          articolo.fotoIndex = (articolo.fotoIndex - 1 + articolo.foto.length) % articolo.foto.length;
+        },
+        aggiungiAlCarrello(articolo) {
+          if (!articolo.colore) {
+            Swal.fire('Seleziona un colore prima di aggiungere al carrello!');
+            return;
+          }
+          this.carrello.push({ ...articolo });
+          Swal.fire({
+            title: '✅ Aggiunto al carrello!',
+            toast: true,
+            timer: 1200,
+            position: 'top-end',
+            showConfirmButton: false
+          });
+        },
+        rimuoviDalCarrello(index) {
+          this.carrello.splice(index, 1);
+        },
+        compraSubito(articolo) {
+          if (!articolo.colore) {
+            Swal.fire('Seleziona un colore prima di comprare!');
+            return;
+          }
+          this.view = 'carrello';
+          this.carrello = [articolo];
+        },
+        inviaOrdineWhatsApp() {
+          const lista = this.carrello.map(a => `${a.nome} (${a.colore}) - ${a.prezzo.toFixed(2)}€`).join('\n');
+          const messaggio = encodeURIComponent(`Nuovo ordine:\n${lista}\nTotale: ${this.totale.toFixed(2)} €`);
+          const numero = '393398952949';
           window.open(`https://wa.me/${numero}?text=${messaggio}`, '_blank');
-        });
+        }
+      },
+      watch: {
+        view(newView) {
+          if (newView === 'carrello') {
+            this.$nextTick(() => {
+              document.getElementById('paypal-button-container').innerHTML = '';
+              paypal.Buttons({
+                createOrder: (data, actions) => {
+                  return actions.order.create({
+                    purchase_units: [{
+                      amount: { value: this.totale.toFixed(2) }
+                    }]
+                  });
+                },
+                onApprove: (data, actions) => {
+                  return actions.order.capture().then((details) => {
+                    Swal.fire('✅ Pagamento riuscito!', `Grazie ${details.payer.name.given_name}!`, 'success');
+                    this.inviaOrdineWhatsApp();
+                    this.carrello = [];
+                    this.view = 'home';
+                  });
+                }
+              }).render('#paypal-button-container');
+            });
+          }
+        }
       }
-    }
-  });
-</script>
+    });
+  </script>
 </body>
 </html>
