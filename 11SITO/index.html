@@ -15,12 +15,15 @@
 
   <style>
     .carousel img {
-      width: 100%;
-      height: 200px;
-      object-fit: cover;
+      width: 200px; /* Impostiamo una larghezza fissa più piccola per le immagini */
+      height: 200px; /* Altezza uguale alla larghezza per mantenere il formato quadrato */
+      object-fit: cover; /* Ritaglia l'immagine mantenendo il quadrato */
     }
     .carousel {
       position: relative;
+      width: 200px; /* Impostiamo la larghezza fissa */
+      height: 200px; /* Impostiamo anche l'altezza fissa */
+      overflow: hidden; /* Rimuove la parte che esce dal quadrato */
     }
     .carousel .arrow {
       position: absolute;
@@ -60,15 +63,14 @@
             <span class="arrow right" @click="nextFoto(index)">&#8594;</span>
           </div>
           <h3 class="text-xl font-semibold mt-2">👜 {{ articolo.nome }}</h3>
-          <p class="text-gray-600">{{ articolo.descrizione }}</p>
-          <p class="text-lg font-bold">💶 {{ articolo.prezzo.toFixed(2) }} €</p>
+          <p class="mt-2">{{ articolo.descrizione }}</p>
+          <p class="mt-2 font-semibold">💶 Prezzo: {{ articolo.prezzo.toFixed(2) }} €</p>
 
-          <label class="block mt-2">🎨 Scegli un colore:
-            <select v-model="articolo.colore" class="mt-1 p-2 border rounded w-full">
-              <option disabled value="">Seleziona colore</option>
-              <option v-for="colore in coloriDisponibili" :key="colore" :value="colore">{{ colore }}</option>
-            </select>
-          </label>
+          <!-- Selettore colore -->
+          <label class="block mt-2">🎨 Colore:</label>
+          <select v-model="articolo.colore" class="p-2 bg-gray-100 rounded">
+            <option v-for="colore in coloriDisponibili" :key="colore" :value="colore">{{ colore }}</option>
+          </select>
 
           <div class="mt-4 flex gap-2">
             <button class="bg-green-400 hover:bg-green-500 text-white px-4 py-2 rounded" @click="aggiungiAlCarrello(articolo)">➕ Aggiungi</button>
@@ -106,16 +108,16 @@
         view: 'home',
         coloriDisponibili: ['Rosso', 'Blu', 'Verde', 'Giallo', 'Nero'],
         articoli: [
-          { nome: 'Articolo 1', descrizione: 'Un bellissimo articolo fatto a mano. ✨', prezzo: 0.01, colore: '', foto: Array.from({ length: 5}, (_,j)=>`immagini/articolo1_foto${j+1}.jpg`), fotoIndex: 0 },
-          { nome: 'Articolo 2', descrizione: 'Un bellissimo articolo fatto a mano. ✨', prezzo: 0.01, colore: '', foto: Array.from({ length: 5}, (_,j)=>`immagini/articolo2_foto${j+1}.jpg`), fotoIndex: 0 },
-          ...Array.from({ length: 8 }, (_,i)=>({
-            nome: `Articolo ${i+3}`,
-            descrizione: 'Un bellissimo articolo fatto a mano. ✨',
-            prezzo: 20 + i*2,
-            colore: '',
-            foto: Array.from({ length: 5}, (_,j)=>`immagini/articolo${i+3}_foto${j+1}.jpg`),
-            fotoIndex: 0
-          }))
+          { nome: 'Articolo 1', descrizione: 'Un bellissimo articolo fatto a mano. ✨', prezzo: 11.01, colore: 'Rosso', foto: ['download.jpg', 'uncinettoborsa.jpg', 'immagine3.jpg', 'immagine4.jpg', 'immagine5.jpg'], fotoIndex: 0 },
+          { nome: 'Articolo 2', descrizione: 'Un bellissimo articolo fatto a mano. ✨', prezzo: 0.01, colore: 'Blu', foto: ['borsa1.jpg', 'immagine2.jpg', 'immagine3.jpg', 'immagine4.jpg', 'immagine5.jpg'], fotoIndex: 0 },
+          { nome: 'Articolo 3', descrizione: 'Un bellissimo articolo fatto a mano. ✨', prezzo: 20, colore: 'Verde', foto: ['immagine1.jpg', 'immagine2.jpg', 'immagine3.jpg', 'immagine4.jpg', 'immagine5.jpg'], fotoIndex: 0 },
+          { nome: 'Articolo 4', descrizione: 'Un bellissimo articolo fatto a mano. ✨', prezzo: 22, colore: 'Giallo', foto: ['immagine1.jpg', 'immagine2.jpg', 'immagine3.jpg', 'immagine4.jpg', 'immagine5.jpg'], fotoIndex: 0 },
+          { nome: 'Articolo 5', descrizione: 'Un bellissimo articolo fatto a mano. ✨', prezzo: 24, colore: 'Nero', foto: ['immagine1.jpg', 'immagine2.jpg', 'immagine3.jpg', 'immagine4.jpg', 'immagine5.jpg'], fotoIndex: 0 },
+          { nome: 'Articolo 6', descrizione: 'Un bellissimo articolo fatto a mano. ✨', prezzo: 26, colore: 'Rosso', foto: ['immagine1.jpg', 'immagine2.jpg', 'immagine3.jpg', 'immagine4.jpg', 'immagine5.jpg'], fotoIndex: 0 },
+          { nome: 'Articolo 7', descrizione: 'Un bellissimo articolo fatto a mano. ✨', prezzo: 28, colore: 'Blu', foto: ['immagine1.jpg', 'immagine2.jpg', 'immagine3.jpg', 'immagine4.jpg', 'immagine5.jpg'], fotoIndex: 0 },
+          { nome: 'Articolo 8', descrizione: 'Un bellissimo articolo fatto a mano. ✨', prezzo: 30, colore: 'Verde', foto: ['immagine1.jpg', 'immagine2.jpg', 'immagine3.jpg', 'immagine4.jpg', 'immagine5.jpg'], fotoIndex: 0 },
+          { nome: 'Articolo 9', descrizione: 'Un bellissimo articolo fatto a mano. ✨', prezzo: 32, colore: 'Giallo', foto: ['immagine1.jpg', 'immagine2.jpg', 'immagine3.jpg', 'immagine4.jpg', 'immagine5.jpg'], fotoIndex: 0 },
+          { nome: 'Articolo 10', descrizione: 'Un bellissimo articolo fatto a mano. ✨', prezzo: 34, colore: 'Nero', foto: ['immagine1.jpg', 'immagine2.jpg', 'immagine3.jpg', 'immagine4.jpg', 'immagine5.jpg'], fotoIndex: 0 }
         ],
         carrello: []
       },
