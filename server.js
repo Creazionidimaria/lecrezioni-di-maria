@@ -1,67 +1,74 @@
-// server.js
 const express = require('express');
-const bodyParser = require('body-parser');
-const cors = require('cors');
-const paypal = require('@paypal/checkout-server-sdk');
+const nodemailer = require('nodemailer');
+const path = require('path');
 
 const app = express();
-const port = 3000;
+const PORT = process.env.PORT || 3000;
 
-app.use(cors());
-app.use(bodyParser.json());
+app.use(express.json()); // body parser integrato
+app.use(express.static('public')); // Cartella per index.html e risorse statiche
 
-// ✅ Configura il client PayPal
-const environment = new paypal.core.LiveEnvironment('IL_TUO_CLIENT_ID', 'IL_TUO_CLIENT_SECRET');
-const client = new paypal.core.PayPalHttpClient(environment);
+// Configura il trasportatore SMTP con i tuoi dati reali (Gmail con password per app)
+const transporter = nodemailer.createTransport({
+  service: 'gmail',
+  auth: {
+    user: 'info.mariacreazioni@gmail.com',     // tua email reale
+    pass: 'ptjj htmp awxw pkck',  // password per app generata da Google
+  }
+});
 
-// ✅ Crea ordine
-app.post('/create-order', async (req, res) => {
-  const request = new paypal.orders.OrdersCreateRequest();
-  request.prefer('return=representation');
-  request.requestBody({
-    intent: 'CAPTURE',
-    purchase_units: [{
-      amount: {
-        currency_code: 'EUR',
-        value: req.body.totale
+// Endpoint per ricevere ordine e inviare email
+app.post('/send-order', (req, res) => {
+  console.log('Ricevuto ordine:', req.body);
+
+  const { ordine, totale, payerName, payerEmail } = req.body;
+
+  if (!ordine || !totale || !payerName || !payerEmail) {
+    return res.status(400).json({ message: 'Dati ordine incompleti' });
+  }
+
+  // Crea riepilogo ordine in formato testo
+  const dettagliOrdine = ordine
+    .map(a => `${a.nome} - Colore: ${a.colore} - Prezzo: €${a.prezzo.toFixed(2)}`)
+    .join('\n');
+
+  // Email da inviare al venditore
+  const mailToVenditore = {
+    from: '"Le Creazioni di Maria" <info.mariacreazioni@gmail.com>',
+    to: 'info.mariacreazioni@gmail.com',
+    subject: `Nuovo ordine da ${payerName}`,
+    text: `Hai ricevuto un nuovo ordine.\n\nCliente: ${payerName}\nEmail cliente: ${payerEmail}\n\nOrdine:\n${dettagliOrdine}\n\nTotale: €${totale}`
+  };
+
+  // Email da inviare al cliente per conferma
+  const mailToCliente = {
+    from: '"Le Creazioni di Maria" <info.mariacreazioni@gmail.com>',
+    to: payerEmail,
+    subject: 'Conferma ordine - Le Creazioni di Maria',
+    text: `Ciao ${payerName},\n\nGrazie per il tuo acquisto! Ecco il riepilogo del tuo ordine:\n\n${dettagliOrdine}\n\nTotale pagato: €${totale}\n\nTi contatteremo presto per la spedizione.\n\nBuona giornata!\nLe Creazioni di Maria`
+  };
+
+  // Invia email al venditore
+  transporter.sendMail(mailToVenditore, (err, info) => {
+    if (err) {
+      console.error('Errore invio email al venditore:', err);
+      return res.status(500).json({ message: 'Errore invio email al venditore' });
+    }
+
+    // Se email al venditore è andata, invia conferma al cliente
+    transporter.sendMail(mailToCliente, (err2, info2) => {
+      if (err2) {
+        console.error('Errore invio email al cliente:', err2);
+        return res.status(200).json({ message: 'Ordine ricevuto, ma errore invio email al cliente' });
       }
-    }]
+
+      // Tutto ok
+      res.status(200).json({ message: 'Ordine e email inviati con successo' });
+    });
   });
-
-  try {
-    const order = await client.execute(request);
-    res.json({ id: order.result.id });
-  } catch (err) {
-    res.status(500).send(err);
-  }
 });
 
-// ✅ Cattura pagamento
-app.post('/capture-order', async (req, res) => {
-  const orderId = req.body.orderID;
-  const request = new paypal.orders.OrdersCaptureRequest(orderId);
-  request.requestBody({});
-
-  try {
-    const capture = await client.execute(request);
-    
-    // ✅ Dopo il pagamento, invia su WhatsApp
-    const articoli = req.body.articoli;
-    const messaggio = encodeURIComponent(
-      `✅ NUOVO ORDINE PAGATO:\n` +
-      articoli.map(a => `${a.nome} (${a.colore}) - ${a.prezzo}€`).join('\n') +
-      `\nTotale: ${req.body.totale}€`
-    );
-    const numero = '393398952949';
-    const waLink = `https://wa.me/${numero}?text=${messaggio}`;
-
-    res.json({ success: true, link: waLink });
-
-  } catch (err) {
-    res.status(500).send(err);
-  }
-});
-
-app.listen(port, () => {
-  console.log(`✅ Server attivo su http://localhost:${port}`);
+// Avvia il server
+app.listen(PORT, () => {
+  console.log(`Server in ascolto sulla porta ${PORT}`);
 });
