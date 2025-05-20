@@ -2,103 +2,108 @@
 <html lang="it">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Le Creazioni di Maria 🧶</title>
 
-  <!-- SDK PayPal -->
-  <script src="https://www.paypal.com/sdk/js?client-id=AYxVS8U1O7i-JAEuDQ6Fji2lOy54isKchM2gb-3YKIY67KwD2mZkO66OlZpoaeKOngjJoxqtbGeUVufy&currency=EUR"></script>
+  <!-- PayPal SDK -->
+  <script src="https://www.paypal.com/sdk/js?client-id=AXEGOW4x2PLeFWnOie-EMAOpo1-bamfCnWFyGsPcV8deKMWvUfPlHsSsBxvWOC_-FTurf9wZJzXq2jee&currency=EUR"></script>
 
-  <!-- Vue, SweetAlert, Tailwind -->
+  <!-- Vue.js -->
   <script src="https://cdn.jsdelivr.net/npm/vue@2"></script>
+  <!-- SweetAlert2 -->
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <!-- TailwindCSS -->
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
 
   <style>
-    .carousel img {
-      width: 200px; /* Impostiamo una larghezza fissa più piccola per le immagini */
-      height: 200px; /* Altezza uguale alla larghezza per mantenere il formato quadrato */
-      object-fit: cover; /* Ritaglia l'immagine mantenendo il quadrato */
-    }
     .carousel {
       position: relative;
-      width: 200px; /* Impostiamo la larghezza fissa */
-      height: 200px; /* Impostiamo anche l'altezza fissa */
-      overflow: hidden; /* Rimuove la parte che esce dal quadrato */
+      width: 200px;
+      height: 200px;
+      overflow: hidden;
+      margin-bottom: 1rem;
     }
-    .carousel .arrow {
+    .carousel img {
+      width: 200px;
+      height: 200px;
+      object-fit: cover;
+      border-radius: 0.5rem;
+    }
+    .arrow {
       position: absolute;
       top: 50%;
       transform: translateY(-50%);
-      background-color: rgba(0,0,0,0.5);
+      background: rgba(0,0,0,0.5);
       color: white;
-      padding: 5px;
+      padding: 0.2rem 0.5rem;
       cursor: pointer;
+      user-select: none;
+      font-weight: bold;
+      border-radius: 0.25rem;
     }
-    .carousel .arrow.left { left: 10px; }
-    .carousel .arrow.right { right: 10px; }
+    .arrow.left { left: 0.3rem; }
+    .arrow.right { right: 0.3rem; }
   </style>
 </head>
 <body class="bg-pink-50 font-sans">
-  <div id="app" class="p-4">
-    <nav class="bg-pink-200 p-4 rounded-lg shadow mb-6 flex justify-between">
-      <div class="text-xl font-bold">🧵 Le Creazioni di Maria</div>
+  <div id="app" class="p-4 max-w-5xl mx-auto">
+
+    <nav class="bg-pink-200 p-4 rounded-lg shadow mb-6 flex justify-between items-center">
+      <div class="text-2xl font-bold">🧵 Le Creazioni di Maria</div>
       <div>
-        <button class="mr-4" @click="view='home'">🏠 Home</button>
-        <button class="mr-4" @click="view='carrello'">🛒 Carrello ({{ carrello.length }})</button>
-        <button @click="view='descrizione'">📜 Descrizione</button>
+        <button class="mr-4 font-semibold" @click="view='home'">🏠 Home</button>
+        <button class="mr-4 font-semibold" @click="view='carrello'">🛒 Carrello ({{ carrello.length }})</button>
+        <button class="font-semibold" @click="view='descrizione'">📜 Descrizione</button>
       </div>
     </nav>
 
-    <div v-if="view==='descrizione'">
-      <h2 class="text-2xl font-bold mb-4">Descrizione</h2>
-      <p>Benvenuti! Qui trovate borse, cappellini e sciarpe uniche fatte a mano da Maria. 💖🧶</p>
-    </div>
+    <section v-if="view==='descrizione'">
+      <h2 class="text-3xl font-bold mb-4">Descrizione</h2>
+      <p class="text-lg">Benvenuti nel negozio di Maria! Qui troverai borse, sciarpe e cappellini fatti all'uncinetto con tanto amore. 🧶💖</p>
+    </section>
 
-    <div v-if="view==='home'">
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div v-for="(articolo, index) in articoli" :key="index" class="bg-white p-4 rounded-lg shadow">
+    <section v-if="view==='home'">
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div v-for="(articolo, index) in articoli" :key="index" class="bg-white p-6 rounded-lg shadow">
           <div class="carousel">
-            <img :src="articolo.foto[articolo.fotoIndex]" :alt="articolo.nome" class="rounded" />
+            <img :src="articolo.foto[articolo.fotoIndex]" :alt="articolo.nome" />
             <span class="arrow left" @click="prevFoto(index)">&#8592;</span>
             <span class="arrow right" @click="nextFoto(index)">&#8594;</span>
           </div>
-          <h3 class="text-xl font-semibold mt-2">👜 {{ articolo.nome }}</h3>
-          <p class="mt-2">{{ articolo.descrizione }}</p>
+          <h3 class="text-xl font-semibold mb-2">👜 {{ articolo.nome }}</h3>
+          <p>{{ articolo.descrizione }}</p>
           <p class="mt-2 font-semibold">💶 Prezzo: {{ articolo.prezzo.toFixed(2) }} €</p>
-
-          <!-- Selettore colore -->
-          <label class="block mt-2">🎨 Colore:</label>
-          <select v-model="articolo.colore" class="p-2 bg-gray-100 rounded">
-            <option v-for="colore in coloriDisponibili" :key="colore" :value="colore">{{ colore }}</option>
-          </select>
-
-          <div class="mt-4 flex gap-2">
-            <button class="bg-green-400 hover:bg-green-500 text-white px-4 py-2 rounded" @click="aggiungiAlCarrello(articolo)">➕ Aggiungi</button>
-            <button class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded" @click="compraSubito(articolo)">💳 Compra</button>
+          <p class="mt-1 font-semibold">🎨 Colore: <span :style="{ color: articolo.colore.toLowerCase() }">{{ articolo.colore }}</span></p>
+          <div class="mt-4 flex gap-3">
+            <button class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600" @click="aggiungiAlCarrello(articolo)">➕ Aggiungi</button>
+            <button class="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700" @click="compraSubito(articolo)">💳 Compra</button>
           </div>
         </div>
       </div>
-    </div>
+    </section>
 
-    <div v-if="view==='carrello'">
-      <h2 class="text-2xl font-bold mb-4">🛍️ Il tuo carrello</h2>
-      <div v-if="carrello.length === 0">Il carrello è vuoto.</div>
+    <section v-if="view==='carrello'">
+      <h2 class="text-3xl font-bold mb-4">🛍️ Il tuo carrello</h2>
+      <div v-if="carrello.length === 0" class="text-lg">Il carrello è vuoto.</div>
       <div v-else>
         <ul>
-          <li v-for="(item, index) in carrello" :key="index" class="mb-2 p-2 border-b">
-            {{ item.nome }} - {{ item.prezzo.toFixed(2) }} € - Colore: {{ item.colore }}
-            <button class="text-red-500 ml-4" @click="rimuoviDalCarrello(index)">❌ Rimuovi</button>
+          <li v-for="(item, index) in carrello" :key="index" class="border-b py-2 flex justify-between items-center">
+            <div>
+              {{ item.nome }} - {{ item.prezzo.toFixed(2) }} € - Colore: {{ item.colore }}
+            </div>
+            <button class="text-red-600 hover:text-red-800 font-bold" @click="rimuoviDalCarrello(index)">❌ Rimuovi</button>
           </li>
         </ul>
-        <p class="mt-4 text-lg font-semibold">Totale: {{ totale.toFixed(2) }} €</p>
-        <div id="paypal-button-container" class="mt-4"></div>
+        <p class="mt-4 text-xl font-semibold">Totale: {{ totale.toFixed(2) }} €</p>
+        <div id="paypal-button-container" class="mt-6"></div>
       </div>
-    </div>
+    </section>
 
-    <footer class="mt-10 bg-pink-200 p-4 text-center rounded-lg">
-      <p>📞 Tel: +39 3398952949 | ✉️ Email: mariacreazioni@email.com</p>
-      <p>💳 Pagamenti accettati: PayPal, Carta di credito</p>
+    <footer class="mt-10 bg-pink-200 p-4 rounded-lg text-center text-sm">
+      <p>📞 Tel: +39 3398952949 | ✉️ Email: info.mariacreazioni@email.com</p>
+      <p>💳 Pagamenti accettati: Mybank,PayPal, Carta di credito</p>
     </footer>
+
   </div>
 
   <script>
@@ -106,36 +111,135 @@
       el: '#app',
       data: {
         view: 'home',
-        coloriDisponibili: ['Rosso', 'Blu', 'Verde', 'Giallo', 'Nero'],
         articoli: [
-          { nome: 'Articolo 1', descrizione: 'Un bellissimo articolo fatto a mano. ✨', prezzo: 11.01, colore: 'Rosso', foto: ['download.jpg', 'uncinettoborsa.jpg', 'immagine3.jpg', 'immagine4.jpg', 'immagine5.jpg'], fotoIndex: 0 },
-          { nome: 'Articolo 2', descrizione: 'Un bellissimo articolo fatto a mano. ✨', prezzo: 0.01, colore: 'Blu', foto: ['borsa1.jpg', 'immagine2.jpg', 'immagine3.jpg', 'immagine4.jpg', 'immagine5.jpg'], fotoIndex: 0 },
-          { nome: 'Articolo 3', descrizione: 'Un bellissimo articolo fatto a mano. ✨', prezzo: 20, colore: 'Verde', foto: ['immagine1.jpg', 'immagine2.jpg', 'immagine3.jpg', 'immagine4.jpg', 'immagine5.jpg'], fotoIndex: 0 },
-          { nome: 'Articolo 4', descrizione: 'Un bellissimo articolo fatto a mano. ✨', prezzo: 22, colore: 'Giallo', foto: ['immagine1.jpg', 'immagine2.jpg', 'immagine3.jpg', 'immagine4.jpg', 'immagine5.jpg'], fotoIndex: 0 },
-          { nome: 'Articolo 5', descrizione: 'Un bellissimo articolo fatto a mano. ✨', prezzo: 24, colore: 'Nero', foto: ['immagine1.jpg', 'immagine2.jpg', 'immagine3.jpg', 'immagine4.jpg', 'immagine5.jpg'], fotoIndex: 0 },
-          { nome: 'Articolo 6', descrizione: 'Un bellissimo articolo fatto a mano. ✨', prezzo: 26, colore: 'Rosso', foto: ['immagine1.jpg', 'immagine2.jpg', 'immagine3.jpg', 'immagine4.jpg', 'immagine5.jpg'], fotoIndex: 0 },
-          { nome: 'Articolo 7', descrizione: 'Un bellissimo articolo fatto a mano. ✨', prezzo: 28, colore: 'Blu', foto: ['immagine1.jpg', 'immagine2.jpg', 'immagine3.jpg', 'immagine4.jpg', 'immagine5.jpg'], fotoIndex: 0 },
-          { nome: 'Articolo 8', descrizione: 'Un bellissimo articolo fatto a mano. ✨', prezzo: 30, colore: 'Verde', foto: ['immagine1.jpg', 'immagine2.jpg', 'immagine3.jpg', 'immagine4.jpg', 'immagine5.jpg'], fotoIndex: 0 },
-          { nome: 'Articolo 9', descrizione: 'Un bellissimo articolo fatto a mano. ✨', prezzo: 32, colore: 'Giallo', foto: ['immagine1.jpg', 'immagine2.jpg', 'immagine3.jpg', 'immagine4.jpg', 'immagine5.jpg'], fotoIndex: 0 },
-          { nome: 'Articolo 10', descrizione: 'Un bellissimo articolo fatto a mano. ✨', prezzo: 34, colore: 'Nero', foto: ['immagine1.jpg', 'immagine2.jpg', 'immagine3.jpg', 'immagine4.jpg', 'immagine5.jpg'], fotoIndex: 0 }
+          { nome: 'Borsa Rossa', descrizione: 'Borsa fatta a mano in lana rossa, perfetta per ogni occasione.', prezzo: 0.01, colore: 'Rosso', foto: ['download.jpg', 'immagine2.jpg', 'immagine3.jpg', 'immagine4.jpg', 'immagine5.jpg'], fotoIndex: 0 },
+          { nome: 'Sciarpa Blu', descrizione: 'Sciarpa calda e morbida, colore blu intenso.', prezzo: 20, colore: 'Blu', foto: ['immagine1.jpg', 'immagine2.jpg', 'immagine3.jpg', 'immagine4.jpg', 'immagine5.jpg'], fotoIndex: 0 },
+          { nome: 'Cappellino Verde', descrizione: 'Cappellino elegante e caldo, colore verde.', prezzo: 15, colore: 'Verde', foto: ['immagine1.jpg', 'immagine2.jpg', 'immagine3.jpg', 'immagine4.jpg', 'immagine5.jpg'], fotoIndex: 0 },
+          { nome: 'Borsa Gialla', descrizione: 'Borsa estiva color giallo vivace.', prezzo: 22, colore: 'Giallo', foto: ['immagine1.jpg', 'immagine2.jpg', 'immagine3.jpg', 'immagine4.jpg', 'immagine5.jpg'], fotoIndex: 0 },
+          { nome: 'Sciarpa Nera', descrizione: 'Sciarpa classica nera, molto versatile.', prezzo: 18, colore: 'Nero', foto: ['immagine1.jpg', 'immagine2.jpg', 'immagine3.jpg', 'immagine4.jpg', 'immagine5.jpg'], fotoIndex: 0 },
+          { nome: 'Cappellino Rosso', descrizione: 'Cappellino color rosso vivace e caldo.', prezzo: 16, colore: 'Rosso', foto: ['immagine1.jpg', 'immagine2.jpg', 'immagine3.jpg', 'immagine4.jpg', 'immagine5.jpg'], fotoIndex: 0 },
+          { nome: 'Borsa Blu', descrizione: 'Borsa in blu elegante e resistente.', prezzo: 25, colore: 'Blu', foto: ['immagine1.jpg', 'immagine2.jpg', 'immagine3.jpg', 'immagine4.jpg', 'immagine5.jpg'], fotoIndex: 0 },
+          { nome: 'Sciarpa Verde', descrizione: 'Sciarpa morbida e colorata di verde.', prezzo: 19, colore: 'Verde', foto: ['immagine1.jpg', 'immagine2.jpg', 'immagine3.jpg', 'immagine4.jpg', 'immagine5.jpg'], fotoIndex: 0 },
+          { nome: 'Cappellino Giallo', descrizione: 'Cappellino giallo solare per l’estate.', prezzo: 17, colore: 'Giallo', foto: ['immagine1.jpg', 'immagine2.jpg', 'immagine3.jpg', 'immagine4.jpg', 'immagine5.jpg'], fotoIndex: 0 },
+          { nome: 'Borsa Nera', descrizione: 'Borsa nera elegante e pratica.', prezzo: 28, colore: 'Nero', foto: ['immagine1.jpg', 'immagine2.jpg', 'immagine3.jpg', 'immagine4.jpg', 'immagine5.jpg'], fotoIndex: 0 },
         ],
         carrello: []
       },
       computed: {
-        totale() { return this.carrello.reduce((s,a)=>s+a.prezzo,0); }
+        totale() {
+          return this.carrello.reduce((acc, item) => acc + item.prezzo, 0);
+        }
       },
       methods: {
-        nextFoto(i){ const a=this.articoli[i]; a.fotoIndex=(a.fotoIndex+1)%a.foto.length; },
-        prevFoto(i){ const a=this.articoli[i]; a.fotoIndex=(a.fotoIndex-1+a.foto.length)%a.foto.length; },
-        aggiungiAlCarrello(a){ if(!a.colore)return Swal.fire('Seleziona un colore prima!'); this.carrello.push({...a}); Swal.fire({title:'✅ Aggiunto!',toast:true,timer:1200,position:'top-end',showConfirmButton:false}); },
-        rimuoviDalCarrello(i){this.carrello.splice(i,1)},
-        compraSubito(a){ if(!a.colore)return Swal.fire('Seleziona un colore prima!'); this.carrello=[a]; this.view='carrello'; },
-        inviaOrdineWhatsApp(){ const lista=this.carrello.map(a=>`${a.nome} (${a.colore}) - ${a.prezzo.toFixed(2)}€`).join('\n'); const msg=encodeURIComponent(`Nuovo ordine:\n${lista}\nTotale: ${this.totale.toFixed(2)} €`); window.open(`https://wa.me/393398952949?text=${msg}`,'_blank'); }
-      },
-      watch: {
-        view(n){ if(n==='carrello'){ this.$nextTick(()=>{ document.getElementById('paypal-button-container').innerHTML=''; paypal.Buttons({ createOrder:(d,a)=>a.order.create({purchase_units:[{amount:{value:this.totale.toFixed(2)}}]}), onApprove:(d,a)=>a.order.capture().then(()=>{ Swal.fire('✅ Pagamento riuscito!','','success'); this.inviaOrdineWhatsApp(); this.carrello=[]; this.view='home'; }) }).render('#paypal-button-container'); }); }}
-      }
-    });
-  </script>
-</body>
-</html>
+        prevFoto(i) {
+          if (this.articoli[i].fotoIndex > 0) {
+            this.articoli[i].fotoIndex--;
+          } else {
+            this.articoli[i].fotoIndex = this.articoli[i].foto.length - 1;
+          }
+        },
+        nextFoto(i) {
+          if (this.articoli[i].fotoIndex < this.articoli[i].foto.length - 1) {
+            this.articoli[i].fotoIndex++;
+          } else {
+            this.articoli[i].fotoIndex = 0;
+          }
+        },
+        aggiungiAlCarrello(articolo) {
+          this.carrello.push(articolo);
+          Swal.fire({
+            icon: 'success',
+            title: 'Aggiunto al carrello',
+            text: articolo.nome + ' è stato aggiunto al carrello 🛒',
+            timer: 1500,
+            showConfirmButton: false
+          });
+        },
+        rimuoviDalCarrello(index) {
+          const nome = this.carrello[index].nome;
+          this.carrello.splice(index, 1);
+          Swal.fire({
+            icon: 'info',
+            title: 'Rimosso',
+            text: nome + ' è stato rimosso dal carrello',
+            timer: 1500,
+            showConfirmButton: false
+          });
+        },
+        compraSubito(articolo) {
+          this.carrello = [articolo];
+          this.view = 'carrello';
+          this.$nextTick(() => {
+            this.renderPayPalButton();
+          });
+        },
+        renderPayPalButton() {
+          if (this.carrello.length === 0) {
+            document.getElementById('paypal-button-container').innerHTML = '';
+            return;
+          }
+          // Pulisce prima di ricreare
+          document.getElementById('paypal-button-container').innerHTML = '';
+          paypal.Buttons({
+            style: {
+              color: 'blue',
+              shape: 'pill',
+              label: 'pay',
+              height: 40
+            },
+            createOrder: (data, actions) => {
+              return actions.order.create({
+                purchase_units: [{
+                  amount: {
+                    value: this.totale.toFixed(2)
+                  }
+                }]
+              });
+            },
+            onApprove: (data, actions) => {
+              return actions.order.capture().then(details => {
+                Swal.fire({
+                  icon: 'success',
+                  title: 'Pagamento riuscito!',
+                  text: `Grazie per il tuo acquisto, ${details.payer.name.given_name}!`,
+                  timer: 2500,
+                  showConfirmButton: false
+                });
+                // Qui puoi aggiungere la chiamata per inviare ordine via server (whatsapp/email)
+                this.carrello = [];
+                this.view = 'home';
+                document.getElementById('paypal-button-container').innerHTML = '';
+              });
+            },
+            onError: (err) => {
+              Swal.fire({
+                icon: 'error',
+title: 'Errore',
+text: 'Si è verificato un errore nel pagamento.',
+});
+}
+}).render('#paypal-button-container');
+}
+},
+watch: {
+view(newVal) {
+if (newVal === 'carrello') {
+this.$nextTick(() => {
+this.renderPayPalButton();
+});
+} else {
+document.getElementById('paypal-button-container').innerHTML = '';
+}
+},
+carrello() {
+if (this.view === 'carrello') {
+this.$nextTick(() => {
+this.renderPayPalButton();
+});
+}
+}
+}
+});
+</script>
+
+</body> </html> ```
