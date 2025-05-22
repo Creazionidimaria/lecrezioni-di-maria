@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+!DOCTYPE html>
 <html lang="it">
 <head>
   <meta charset="UTF-8" />
@@ -40,8 +40,6 @@
       user-select: none;
       font-weight: bold;
       border-radius: 0.25rem;
-      user-select: none;
-      z-index: 10;
     }
     .arrow.left { left: 0.3rem; }
     .arrow.right { right: 0.3rem; }
@@ -114,7 +112,7 @@
       data: {
         view: 'home',
         articoli: [
-          { nome: 'Borsa Rossa', descrizione: 'Borsa fatta a mano in lana rossa, perfetta per ogni occasione.', prezzo: 0,01, colore: 'Rosso', foto: ['download.jpg', 'immagine2.jpg', 'immagine3.jpg', 'immagine4.jpg', 'immagine5.jpg'], fotoIndex: 0 },
+          { nome: 'Borsa Rossa', descrizione: 'Borsa fatta a mano in lana rossa, perfetta per ogni occasione.', prezzo: 20, colore: 'Rosso', foto: ['download.jpg', 'immagine2.jpg', 'immagine3.jpg', 'immagine4.jpg', 'immagine5.jpg'], fotoIndex: 0 },
           { nome: 'Sciarpa Blu', descrizione: 'Sciarpa calda e morbida, colore blu intenso.', prezzo: 20, colore: 'Blu', foto: ['immagine1.jpg', 'immagine2.jpg', 'immagine3.jpg', 'immagine4.jpg', 'immagine5.jpg'], fotoIndex: 0 },
           { nome: 'Cappellino Verde', descrizione: 'Cappellino elegante e caldo, colore verde.', prezzo: 15, colore: 'Verde', foto: ['immagine1.jpg', 'immagine2.jpg', 'immagine3.jpg', 'immagine4.jpg', 'immagine5.jpg'], fotoIndex: 0 },
           { nome: 'Borsa Gialla', descrizione: 'Borsa estiva color giallo vivace.', prezzo: 22, colore: 'Giallo', foto: ['immagine1.jpg', 'immagine2.jpg', 'immagine3.jpg', 'immagine4.jpg', 'immagine5.jpg'], fotoIndex: 0 },
@@ -138,62 +136,54 @@
           Swal.fire({
             icon: 'success',
             title: 'Aggiunto al carrello!',
-            text: articolo.nome + ' è stato aggiunto.',
+            text: `${articolo.nome} è stato aggiunto al carrello.`,
             timer: 1500,
             showConfirmButton: false
           });
         },
         rimuoviDalCarrello(index) {
-          const rimosso = this.carrello.splice(index, 1)[0];
+          const nome = this.carrello[index].nome;
+          this.carrello.splice(index, 1);
           Swal.fire({
             icon: 'info',
-            title: 'Rimosso dal carrello',
-            text: rimosso.nome + ' è stato rimosso.',
+            title: 'Rimosso',
+            text: `${nome} è stato rimosso dal carrello.`,
             timer: 1500,
             showConfirmButton: false
           });
         },
         compraSubito(articolo) {
-          // Vado direttamente alla vista carrello con solo questo articolo
           this.carrello = [{...articolo}];
           this.view = 'carrello';
-          this.$nextTick(() => {
-            this.renderPayPalButton();
-          });
+          this.renderPayPalButton();
         },
         prevFoto(index) {
-          const articolo = this.articoli[index];
-          articolo.fotoIndex = (articolo.fotoIndex - 1 + articolo.foto.length) % articolo.foto.length;
+          let art = this.articoli[index];
+          art.fotoIndex = (art.fotoIndex === 0) ? art.foto.length - 1 : art.fotoIndex - 1;
         },
         nextFoto(index) {
-          const articolo = this.articoli[index];
-          articolo.fotoIndex = (articolo.fotoIndex + 1) % articolo.foto.length;
+          let art = this.articoli[index];
+          art.fotoIndex = (art.fotoIndex === art.foto.length - 1) ? 0 : art.fotoIndex + 1;
         },
         renderPayPalButton() {
-          if (this.carrello.length === 0) {
-            // Rimuovo eventuale bottone PayPal
-            const container = document.getElementById('paypal-button-container');
-            container.innerHTML = '';
-            return;
-          }
-          const totale = this.totale.toFixed(2);
-
-          const container = document.getElementById('paypal-button-container');
+          // Pulisci container se già esiste un bottone
+          let container = document.getElementById('paypal-button-container');
           container.innerHTML = '';
+
+          if (this.carrello.length === 0) return;
 
           paypal.Buttons({
             style: {
+              color: 'blue',
               shape: 'rect',
-              color: 'gold',
-              layout: 'vertical',
-              label: 'pay'
+              label: 'paypal',
+              height: 40
             },
             createOrder: (data, actions) => {
               return actions.order.create({
                 purchase_units: [{
                   amount: {
-                    currency_code: 'EUR',
-                    value: totale
+                    value: this.totale.toFixed(2)
                   }
                 }]
               });
@@ -202,44 +192,42 @@
               return actions.order.capture().then(details => {
                 Swal.fire({
                   icon: 'success',
-                  title: 'Pagamento riuscito!',
-                  text: 'Grazie per il tuo acquisto, ' + details.payer.name.given_name,
+                  title: 'Pagamento completato!',
+                  html: `Grazie, ${details.payer.name.given_name}!<br>Hai pagato €${this.totale.toFixed(2)}.`,
+                  timer: 3000,
+                  showConfirmButton: true
                 });
                 this.carrello = [];
                 this.view = 'home';
-                container.innerHTML = '';
               });
             },
             onError: err => {
               Swal.fire({
                 icon: 'error',
                 title: 'Errore pagamento',
-                text: 'Qualcosa è andato storto, riprova.'
+                text: 'Si è verificato un errore durante il pagamento. Riprova.',
               });
-              console.error(err);
             }
           }).render('#paypal-button-container');
         }
       },
       watch: {
-        carrello() {
-          if (this.view === 'carrello') {
-            this.$nextTick(() => this.renderPayPalButton());
+        view(newVal) {
+          if (newVal === 'carrello') {
+            this.renderPayPalButton();
           }
         },
-        view(nuovaVista) {
-          if (nuovaVista === 'carrello') {
-            this.$nextTick(() => this.renderPayPalButton());
+        carrello() {
+          if(this.view === 'carrello') {
+            this.renderPayPalButton();
           }
         }
       },
       mounted() {
-        // Inizializza bottone PayPal se carrello non vuoto e vista carrello
-        if (this.view === 'carrello' && this.carrello.length > 0) {
-          this.renderPayPalButton();
-        }
+        this.renderPayPalButton();
       }
     });
   </script>
 </body>
 </html>
+
