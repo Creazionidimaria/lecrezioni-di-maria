@@ -33,7 +33,7 @@ app.post('/invia-email', (req, res) => {
       service: 'gmail',
       auth: {
         user: 'info.mariacreazioni@gmail.com', // ⚠️ CAMBIA QUI
-        pass: 'ptjj htmp awxw pkck'    // ⚠️ CAMBIA QUI
+        pass: 'xpae xgdp atba brxa'    // ⚠️ CAMBIA QUI
       }
     });
 
