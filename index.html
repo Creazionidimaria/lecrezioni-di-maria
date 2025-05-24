@@ -1,4 +1,3 @@
-<!DOCTYPE html>
 <html lang="it">
 <head>
   <meta charset="UTF-8" />
@@ -7,13 +6,12 @@
 
   <!-- PayPal SDK -->
   <script src="https://www.paypal.com/sdk/js?client-id=AW5QKjMfQn0XfqoHuCl-Q9jZgy01EHpo36tYsj8nqEzU0F6V2APuMg7eIRTi-EkF8Rqk2HRnGpKH6d87&currency=EUR"></script>
-
   <!-- Vue.js -->
   <script src="https://cdn.jsdelivr.net/npm/vue@2"></script>
   <!-- SweetAlert2 -->
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <!-- TailwindCSS -->
-  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet" />
 
   <style>
     .carousel {
@@ -95,144 +93,234 @@
           </li>
         </ul>
         <p class="mt-4 text-xl font-semibold">Totale: {{ totale.toFixed(2) }} €</p>
+
+        <!-- Form dati cliente -->
+        <div class="mt-6 mb-4 max-w-sm">
+          <label class="block mb-2 font-semibold" for="nome">Nome completo:</label>
+          <input id="nome" v-model="nomeCliente" type="text" class="w-full p-2 border rounded" placeholder="Inserisci il tuo nome" />
+
+          <label class="block mt-4 mb-2 font-semibold" for="email">Email:</label>
+          <input id="email" v-model="emailCliente" type="email" class="w-full p-2 border rounded" placeholder="Inserisci la tua email" />
+        </div>
+
         <div id="paypal-button-container" class="mt-6"></div>
+
+        <button class="mt-4 bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600" @click="svuotaCarrello" :disabled="carrello.length === 0">
+          🗑️ Svuota Carrello
+        </button>
       </div>
     </section>
 
-    <footer class="mt-10 bg-pink-200 p-4 rounded-lg text-center text-sm">
-      <p>📞 Tel: +39 3398952949 | ✉️ Email: info.mariacreazioni@email.com</p>
-      <p>💳 Pagamenti accettati: Mybank, PayPal, Carta di credito</p>
-    </footer>
-
   </div>
 
-  <script>
-    new Vue({
-      el: '#app',
-      data: {
-        view: 'home',
-        articoli: [
-          {
-            "nome": "Borsa Rossa",
-            "descrizione": "Borsa fatta a mano in lana rossa.",
-            "prezzo": 0.01,
-            "colore": "Rosso",
-            "foto": [
-              "https://i.imgur.com/5q0QX5k.jpg",
-              "https://i.imgur.com/I6PmWUC.jpg",
-              "https://i.imgur.com/ZQ6VDiy.jpg",
-              "https://i.imgur.com/FHyzgZJ.jpg",
-              "https://i.imgur.com/2sPq3YO.jpg"
-            ],
-            "fotoIndex": 0
-          },
-          {
-            "nome": "Sciarpa Blu",
-            "descrizione": "Sciarpa calda blu fatta a mano.",
-            "prezzo": 18.00,
-            "colore": "Blu",
-            "foto": [
-              "https://i.imgur.com/VFkzYzR.jpg",
-              "https://i.imgur.com/tVk7yyV.jpg",
-              "https://i.imgur.com/o0gK8Xo.jpg",
-              "https://i.imgur.com/14yzG9k.jpg",
-              "https://i.imgur.com/pB9A1V7.jpg"
-            ],
-            "fotoIndex": 0
-          },
-          {
-            "nome": "Cappellino Verde",
-            "descrizione": "Cappellino verde elegante e caldo.",
-            "prezzo": 15.00,
-            "colore": "Verde",
-            "foto": [
-              "https://i.imgur.com/vF44Dcf.jpg",
-              "https://i.imgur.com/QXU2eMa.jpg",
-              "https://i.imgur.com/W8ghENc.jpg",
-              "https://i.imgur.com/3T9Tx3h.jpg",
-              "https://i.imgur.com/5HWVwN8.jpg"
-            ],
-            "fotoIndex": 0
-          }
-          // Puoi aggiungere altri articoli nello stesso formato
+<script>
+new Vue({
+  el: '#app',
+  data: {
+    view: 'home',
+    articoli: [
+      {
+        nome: 'Borsa Elegante',
+        descrizione: 'Borsa fatta a mano con filato pregiato.',
+        prezzo: 0.01,
+        colore: 'Rosso',
+        foto: [
+          'https://via.placeholder.com/200?text=Borsa1-1',
+          'https://via.placeholder.com/200?text=Borsa1-2',
+          'https://via.placeholder.com/200?text=Borsa1-3',
+          'https://via.placeholder.com/200?text=Borsa1-4',
+          'https://via.placeholder.com/200?text=Borsa1-5'
         ],
-        carrello: []
+        fotoIndex: 0
       },
-      computed: {
-        totale() {
-          return this.carrello.reduce((sum, item) => sum + item.prezzo, 0);
-        }
+      {
+        nome: 'Sciarpa Morbida',
+        descrizione: 'Sciarpa calda e morbida per l\'inverno.',
+        prezzo: 20.00,
+        colore: 'Blu',
+        foto: [
+          'https://via.placeholder.com/200?text=Sciarpa1-1',
+          'https://via.placeholder.com/200?text=Sciarpa1-2',
+          'https://via.placeholder.com/200?text=Sciarpa1-3',
+          'https://via.placeholder.com/200?text=Sciarpa1-4',
+          'https://via.placeholder.com/200?text=Sciarpa1-5'
+        ],
+        fotoIndex: 0
       },
-      watch: {
-        view(val) {
-          if (val === 'carrello' && this.carrello.length > 0) {
-            this.renderPayPal();
-          }
-        },
-        carrello() {
-          if (this.view === 'carrello' && this.carrello.length > 0) {
-            this.renderPayPal();
-          }
-        }
+      {
+        nome: 'Cappellino Invernale',
+        descrizione: 'Cappellino caldo fatto all\'uncinetto.',
+        prezzo: 15.00,
+        colore: 'Grigio',
+        foto: [
+          'https://via.placeholder.com/200?text=Cappellino1-1',
+          'https://via.placeholder.com/200?text=Cappellino1-2',
+          'https://via.placeholder.com/200?text=Cappellino1-3',
+          'https://via.placeholder.com/200?text=Cappellino1-4',
+          'https://via.placeholder.com/200?text=Cappellino1-5'
+        ],
+        fotoIndex: 0
       },
-      methods: {
-        prevFoto(i) {
-          const art = this.articoli[i];
-          art.fotoIndex = (art.fotoIndex - 1 + art.foto.length) % art.foto.length;
-        },
-        nextFoto(i) {
-          const art = this.articoli[i];
-          art.fotoIndex = (art.fotoIndex + 1) % art.foto.length;
-        },
-        aggiungiAlCarrello(articolo) {
-          this.carrello.push({ ...articolo });
-          Swal.fire({
-            icon: 'success',
-            title: 'Aggiunto al carrello',
-            text: articolo.nome + ' è stato aggiunto!',
-            timer: 1500,
-            showConfirmButton: false
-          });
-        },
-        rimuoviDalCarrello(index) {
-          const rimosso = this.carrello.splice(index, 1)[0];
-          Swal.fire({
-            icon: 'info',
-            title: 'Rimosso dal carrello',
-            text: rimosso.nome + ' è stato rimosso!',
-            timer: 1500,
-            showConfirmButton: false
-          });
-        },
-        compraSubito(articolo) {
-          this.carrello = [articolo];
-          this.view = 'carrello';
-        },
-        renderPayPal() {
-          setTimeout(() => {
-            document.getElementById("paypal-button-container").innerHTML = "";
-            paypal.Buttons({
-              createOrder: (data, actions) => {
-                return actions.order.create({
-                  purchase_units: [{
-                    amount: {
-                      value: this.totale.toFixed(2)
-                    }
-                  }]
-                });
-              },
-              onApprove: (data, actions) => {
-                return actions.order.capture().then((details) => {
-                  Swal.fire('Pagamento completato', 'Grazie, ' + details.payer.name.given_name + '!', 'success');
-                  this.carrello = [];
-                  this.view = 'home';
-                });
-              }
-            }).render('#paypal-button-container');
-          }, 100);
-        }
+      // Aggiungi altri articoli fino a 10 come preferisci
+    ],
+    carrello: [],
+    nomeCliente: '',
+    emailCliente: ''
+  },
+  computed: {
+    totale() {
+      return this.carrello.reduce((sum, item) => sum + item.prezzo, 0);
+    }
+  },
+  methods: {
+    prevFoto(index) {
+      const art = this.articoli[index];
+      art.fotoIndex = (art.fotoIndex - 1 + art.foto.length) % art.foto.length;
+    },
+    nextFoto(index) {
+      const art = this.articoli[index];
+      art.fotoIndex = (art.fotoIndex + 1) % art.foto.length;
+    },
+    aggiungiAlCarrello(articolo) {
+      this.carrello.push(articolo);
+      Swal.fire({
+        icon: 'success',
+        title: 'Aggiunto al carrello!',
+        timer: 1000,
+        showConfirmButton: false
+      });
+    },
+    rimuoviDalCarrello(i) {
+      this.carrello.splice(i, 1);
+      Swal.fire({
+        icon: 'info',
+        title: 'Rimosso dal carrello',
+        timer: 1000,
+        showConfirmButton: false
+      });
+    },
+    svuotaCarrello() {
+      this.carrello = [];
+      Swal.fire({
+        icon: 'warning',
+        title: 'Carrello svuotato',
+        timer: 1000,
+        showConfirmButton: false
+      });
+    },
+    compraSubito(articolo) {
+      this.carrello = [articolo];
+      this.view = 'carrello';
+      Swal.fire({
+        icon: 'info',
+        title: 'Procedi al pagamento',
+        timer: 1200,
+        showConfirmButton: false
+      });
+    },
+    // Funzione per inviare ordine al backend dopo pagamento
+    salvaOrdine() {
+      if (!this.nomeCliente || !this.emailCliente) {
+        Swal.fire({
+          icon: 'error',
+          title: 'Inserisci nome e email',
+        });
+        return;
       }
-    });
-  </script>
+      const datiOrdine = {
+        nomeCliente: this.nomeCliente,
+        emailCliente: this.emailCliente,
+        prodotti: this.carrello.map(item => ({
+          nome: item.nome,
+          prezzo: item.prezzo,
+          colore: item.colore
+        })),
+        totale: this.totale
+      };
+      return fetch('http://localhost:3000/api/ordini', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(datiOrdine)
+      })
+      .then(res => {
+        if (!res.ok) throw new Error('Errore nel salvataggio ordine');
+        return res.json();
+      });
+    },
+    renderPayPalButton() {
+      const self = this;
+      paypal.Buttons({
+        createOrder: function(data, actions) {
+          return actions.order.create({
+            purchase_units: [{
+              amount: {
+                value: self.totale.toFixed(2)
+              }
+            }]
+          });
+        },
+        onApprove: function(data, actions) {
+          return actions.order.capture().then(function(details) {
+            self.salvaOrdine()
+              .then(() => {
+                Swal.fire({
+                  icon: 'success',
+                  title: 'Pagamento e ordine completati!',
+                  text: `Grazie, ${details.payer.name.given_name}!`,
+                  timer: 2500,
+                  showConfirmButton: false
+                });
+                self.carrello = [];
+                self.nomeCliente = '';
+                self.emailCliente = '';
+                self.view = 'home';
+              })
+              .catch(() => {
+                Swal.fire({
+                  icon: 'error',
+                  title: 'Ordine non salvato',
+                  text: 'Errore nel server, contatta il supporto.'
+                });
+              });
+          });
+        },
+        onError: function(err) {
+          Swal.fire({
+            icon: 'error',
+            title: 'Errore pagamento',
+            text: err.toString()
+          });
+        }
+      }).render('#paypal-button-container');
+    }
+  },
+  watch: {
+    carrello() {
+      // Ricarica il bottone PayPal ogni volta che cambia il carrello
+      if (this.carrello.length > 0 && this.nomeCliente && this.emailCliente) {
+        this.renderPayPalButton();
+      } else {
+        // Svuota il contenitore PayPal se carrello vuoto o dati mancanti
+        document.getElementById('paypal-button-container').innerHTML = '';
+      }
+    },
+    nomeCliente() {
+      if (this.carrello.length > 0 && this.nomeCliente && this.emailCliente) {
+        this.renderPayPalButton();
+      } else {
+        document.getElementById('paypal-button-container').innerHTML = '';
+      }
+    },
+    emailCliente() {
+      if (this.carrello.length > 0 && this.nomeCliente && this.emailCliente) {
+        this.renderPayPalButton();
+      } else {
+        document.getElementById('paypal-button-container').innerHTML = '';
+      }
+    }
+  }
+});
+</script>
 </body>
 </html>
+
