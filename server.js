@@ -17,14 +17,18 @@ const db = new sqlite3.Database('./ordini.sqlite', (err) => {
     console.error('Errore apertura DB', err.message);
   } else {
     console.log('DB SQLite connesso');
-    db.run(CREATE TABLE IF NOT EXISTS ordini (
+    db.run(`CREATE TABLE IF NOT EXISTS ordini (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       email_cliente TEXT,
       ordine TEXT,
       totale REAL,
       paypal_order_id TEXT,
       data_ordine DATETIME DEFAULT CURRENT_TIMESTAMP
-    ));
+    )`, (err) => {
+      if (err) {
+        console.error('Errore creazione tabella', err.message);
+      }
+    });
   }
 });
 
@@ -46,9 +50,9 @@ app.post('/invia-ordine', (req, res) => {
   }
 
   // Salva ordine nel DB (carrello JSON.stringify)
-  const ordineString = JSON.stringify(carrello);
+  const ordineString = JSON.stringify(carrello, null, 2);
 
-  db.run(INSERT INTO ordini (email_cliente, ordine, totale, paypal_order_id) VALUES (?, ?, ?, ?),
+  db.run(`INSERT INTO ordini (email_cliente, ordine, totale, paypal_order_id) VALUES (?, ?, ?, ?)`,
     [email, ordineString, totale, paypalOrderId],
     function (err) {
       if (err) {
@@ -61,17 +65,17 @@ app.post('/invia-ordine', (req, res) => {
         from: 'info.mariacreazioni@gmail.com',
         to: email,
         subject: 'Conferma ordine Le Creazioni di Maria',
-        html: <h2>Grazie per il tuo ordine!</h2>
+        html: `<h2>Grazie per il tuo ordine!</h2>
                <p>Totale: €${totale.toFixed(2)}</p>
-               <pre>${ordineString}</pre>
+               <pre>${ordineString}</pre>`
       };
       const mailOptionsVenditore = {
         from: 'info.mariacreazioni@gmail.com',
         to: 'info.mariacreazioni@gmail.com',
         subject: 'Nuovo ordine ricevuto',
-        html: <h2>Nuovo ordine da ${email}</h2>
+        html: `<h2>Nuovo ordine da ${email}</h2>
                <p>Totale: €${totale.toFixed(2)}</p>
-               <pre>${ordineString}</pre>
+               <pre>${ordineString}</pre>`
       };
 
       transporter.sendMail(mailOptionsCliente, (error, info) => {
@@ -90,5 +94,5 @@ app.post('/invia-ordine', (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(Server attivo su http://localhost:${PORT});
+  console.log(`Server attivo su http://localhost:${PORT}`);
 });
