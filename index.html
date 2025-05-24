@@ -1,3 +1,5 @@
+<!DOCTYPE html> 
+<!DOCTYPE html>
 <html lang="it">
 <head>
   <meta charset="UTF-8" />
@@ -122,7 +124,7 @@ new Vue({
       {
         nome: 'Borsa Elegante',
         descrizione: 'Borsa fatta a mano con filato pregiato.',
-        prezzo: 0.01,
+        prezzo: 29.99,
         colore: 'Rosso',
         foto: [
           'https://via.placeholder.com/200?text=Borsa1-1',
@@ -160,8 +162,8 @@ new Vue({
           'https://via.placeholder.com/200?text=Cappellino1-5'
         ],
         fotoIndex: 0
-      },
-      // Aggiungi altri articoli fino a 10 come preferisci
+      }
+      // Puoi aggiungere altri 7 articoli qui, rispettando la struttura
     ],
     carrello: [],
     nomeCliente: '',
@@ -174,28 +176,30 @@ new Vue({
   },
   methods: {
     prevFoto(index) {
-      const art = this.articoli[index];
-      art.fotoIndex = (art.fotoIndex - 1 + art.foto.length) % art.foto.length;
+      let articolo = this.articoli[index];
+      articolo.fotoIndex = (articolo.fotoIndex - 1 + articolo.foto.length) % articolo.foto.length;
     },
     nextFoto(index) {
-      const art = this.articoli[index];
-      art.fotoIndex = (art.fotoIndex + 1) % art.foto.length;
+      let articolo = this.articoli[index];
+      articolo.fotoIndex = (articolo.fotoIndex + 1) % articolo.foto.length;
     },
     aggiungiAlCarrello(articolo) {
-      this.carrello.push(articolo);
+      this.carrello.push({...articolo});
       Swal.fire({
         icon: 'success',
         title: 'Aggiunto al carrello!',
-        timer: 1000,
+        text: articolo.nome + ' è stato aggiunto',
+        timer: 1500,
         showConfirmButton: false
       });
     },
     rimuoviDalCarrello(i) {
-      this.carrello.splice(i, 1);
+      const rimosso = this.carrello.splice(i, 1)[0];
       Swal.fire({
         icon: 'info',
         title: 'Rimosso dal carrello',
-        timer: 1000,
+        text: rimosso.nome + ' è stato rimosso',
+        timer: 1500,
         showConfirmButton: false
       });
     },
@@ -204,90 +208,93 @@ new Vue({
       Swal.fire({
         icon: 'warning',
         title: 'Carrello svuotato',
-        timer: 1000,
+        timer: 1500,
         showConfirmButton: false
       });
     },
     compraSubito(articolo) {
-      this.carrello = [articolo];
+      this.carrello = [{...articolo}];
       this.view = 'carrello';
-      Swal.fire({
-        icon: 'info',
-        title: 'Procedi al pagamento',
-        timer: 1200,
-        showConfirmButton: false
-      });
-    },
-    // Funzione per inviare ordine al backend dopo pagamento
-    salvaOrdine() {
-      if (!this.nomeCliente || !this.emailCliente) {
-        Swal.fire({
-          icon: 'error',
-          title: 'Inserisci nome e email',
-        });
-        return;
-      }
-      const datiOrdine = {
-        nomeCliente: this.nomeCliente,
-        emailCliente: this.emailCliente,
-        prodotti: this.carrello.map(item => ({
-          nome: item.nome,
-          prezzo: item.prezzo,
-          colore: item.colore
-        })),
-        totale: this.totale
-      };
-      return fetch('http://localhost:3000/api/ordini', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(datiOrdine)
-      })
-      .then(res => {
-        if (!res.ok) throw new Error('Errore nel salvataggio ordine');
-        return res.json();
+      this.$nextTick(() => {
+        this.renderPayPalButton();
       });
     },
     renderPayPalButton() {
-      const self = this;
+      // Pulisce container
+      const container = document.getElementById('paypal-button-container');
+      container.innerHTML = '';
+
+      if (this.carrello.length === 0 || !this.nomeCliente.trim() || !this.emailCliente.trim()) {
+        return; // Non mostra il bottone PayPal se dati mancanti
+      }
+
       paypal.Buttons({
-        createOrder: function(data, actions) {
+        style: {
+          shape: 'rect',
+          color: 'gold',
+          layout: 'vertical',
+          label: 'paypal'
+        },
+        createOrder: (data, actions) => {
           return actions.order.create({
             purchase_units: [{
               amount: {
-                value: self.totale.toFixed(2)
-              }
+                currency_code: 'EUR',
+                value: this.totale.toFixed(2)
+              },
+              description: 'Acquisto da Le Creazioni di Maria'
             }]
           });
         },
-        onApprove: function(data, actions) {
-          return actions.order.capture().then(function(details) {
-            self.salvaOrdine()
-              .then(() => {
+        onApprove: (data, actions) => {
+          return actions.order.capture().then(details => {
+            // Invio ordine al server
+            fetch('/api/ordini', {
+              method: 'POST',
+              headers: {'Content-Type': 'application/json'},
+              body: JSON.stringify({
+                nomeCliente: this.nomeCliente,
+                emailCliente: this.emailCliente,
+                carrello: this.carrello,
+                totale: this.totale.toFixed(2),
+                paypalOrderId: data.orderID,
+                payerName: details.payer.name.given_name + ' ' + details.payer.name.surname,
+                payerEmail: details.payer.email_address
+              })
+            }).then(res => {
+              if (res.ok) {
                 Swal.fire({
                   icon: 'success',
-                  title: 'Pagamento e ordine completati!',
-                  text: `Grazie, ${details.payer.name.given_name}!`,
-                  timer: 2500,
+                  title: 'Pagamento effettuato!',
+                  html: `<p>Grazie per il tuo acquisto, ${this.nomeCliente}!</p>`,
+                  timer: 3000,
                   showConfirmButton: false
                 });
-                self.carrello = [];
-                self.nomeCliente = '';
-                self.emailCliente = '';
-                self.view = 'home';
-              })
-              .catch(() => {
+                this.carrello = [];
+                this.nomeCliente = '';
+                this.emailCliente = '';
+                this.view = 'home';
+                container.innerHTML = '';
+              } else {
                 Swal.fire({
                   icon: 'error',
-                  title: 'Ordine non salvato',
-                  text: 'Errore nel server, contatta il supporto.'
+                  title: 'Errore nell\'invio ordine',
+                  text: 'Contatta il supporto.',
                 });
+              }
+            }).catch(() => {
+              Swal.fire({
+                icon: 'error',
+                title: 'Errore di rete',
+                text: 'Impossibile inviare ordine.',
               });
+            });
           });
         },
-        onError: function(err) {
+        onError: err => {
           Swal.fire({
             icon: 'error',
-            title: 'Errore pagamento',
+            title: 'Errore PayPal',
             text: err.toString()
           });
         }
@@ -296,27 +303,13 @@ new Vue({
   },
   watch: {
     carrello() {
-      // Ricarica il bottone PayPal ogni volta che cambia il carrello
-      if (this.carrello.length > 0 && this.nomeCliente && this.emailCliente) {
-        this.renderPayPalButton();
-      } else {
-        // Svuota il contenitore PayPal se carrello vuoto o dati mancanti
-        document.getElementById('paypal-button-container').innerHTML = '';
-      }
+      this.renderPayPalButton();
     },
     nomeCliente() {
-      if (this.carrello.length > 0 && this.nomeCliente && this.emailCliente) {
-        this.renderPayPalButton();
-      } else {
-        document.getElementById('paypal-button-container').innerHTML = '';
-      }
+      this.renderPayPalButton();
     },
     emailCliente() {
-      if (this.carrello.length > 0 && this.nomeCliente && this.emailCliente) {
-        this.renderPayPalButton();
-      } else {
-        document.getElementById('paypal-button-container').innerHTML = '';
-      }
+      this.renderPayPalButton();
     }
   }
 });
