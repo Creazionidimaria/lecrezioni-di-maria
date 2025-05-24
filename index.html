@@ -101,7 +101,7 @@
 
     <footer class="mt-10 bg-pink-200 p-4 rounded-lg text-center text-sm">
       <p>📞 Tel: +39 3398952949 | ✉️ Email: info.mariacreazioni@email.com</p>
-      <p>💳 Pagamenti accettati: Mybank,PayPal, Carta di credito</p>
+      <p>💳 Pagamenti accettati: Mybank, PayPal, Carta di credito</p>
     </footer>
 
   </div>
@@ -112,37 +112,80 @@
       data: {
         view: 'home',
         articoli: [
-          { nome: 'Borsa Rossa', descrizione: 'Borsa fatta a mano in lana rossa, perfetta per ogni occasione.', prezzo: 0.01, colore: 'Rosso', foto: ['download.jpg', 'immagine2.jpg', 'immagine3.jpg', 'immagine4.jpg', 'immagine5.jpg'], fotoIndex: 0 },
-          { nome: 'Sciarpa Blu', descrizione: 'Sciarpa calda e morbida, colore blu intenso.', prezzo: 0.01, colore: 'Blu', foto: ['immagine1.jpg', 'immagine2.jpg', 'immagine3.jpg', 'immagine4.jpg', 'immagine5.jpg'], fotoIndex: 0 },
-          { nome: 'Cappellino Verde', descrizione: 'Cappellino elegante e caldo, colore verde.', prezzo: 15, colore: 'Verde', foto: ['immagine1.jpg', 'immagine2.jpg', 'immagine3.jpg', 'immagine4.jpg', 'immagine5.jpg'], fotoIndex: 0 },
-          { nome: 'Borsa Gialla', descrizione: 'Borsa estiva color giallo vivace.', prezzo: 22, colore: 'Giallo', foto: ['immagine1.jpg', 'immagine2.jpg', 'immagine3.jpg', 'immagine4.jpg', 'immagine5.jpg'], fotoIndex: 0 },
-          { nome: 'Sciarpa Nera', descrizione: 'Sciarpa classica nera, molto versatile.', prezzo: 18, colore: 'Nero', foto: ['immagine1.jpg', 'immagine2.jpg', 'immagine3.jpg', 'immagine4.jpg', 'immagine5.jpg'], fotoIndex: 0 },
-          { nome: 'Cappellino Rosso', descrizione: 'Cappellino color rosso vivace e caldo.', prezzo: 16, colore: 'Rosso', foto: ['immagine1.jpg', 'immagine2.jpg', 'immagine3.jpg', 'immagine4.jpg', 'immagine5.jpg'], fotoIndex: 0 },
-          { nome: 'Borsa Blu', descrizione: 'Borsa in blu elegante e resistente.', prezzo: 25, colore: 'Blu', foto: ['immagine1.jpg', 'immagine2.jpg', 'immagine3.jpg', 'immagine4.jpg', 'immagine5.jpg'], fotoIndex: 0 },
-          { nome: 'Sciarpa Verde', descrizione: 'Sciarpa verde con motivo a trecce.', prezzo: 14, colore: 'Verde', foto: ['immagine1.jpg', 'immagine2.jpg', 'immagine3.jpg', 'immagine4.jpg', 'immagine5.jpg'], fotoIndex: 0 },
-          { nome: 'Cappellino Nero', descrizione: 'Cappellino nero semplice e sobrio.', prezzo: 13, colore: 'Nero', foto: ['immagine1.jpg', 'immagine2.jpg', 'immagine3.jpg', 'immagine4.jpg', 'immagine5.jpg'], fotoIndex: 0 },
-          { nome: 'Borsa Rosa', descrizione: 'Borsa rosa delicata e femminile.', prezzo: 20, colore: 'Rosa', foto: ['immagine1.jpg', 'immagine2.jpg', 'immagine3.jpg', 'immagine4.jpg', 'immagine5.jpg'], fotoIndex: 0 },
+          {
+            "nome": "Borsa Rossa",
+            "descrizione": "Borsa fatta a mano in lana rossa.",
+            "prezzo": 0.01,
+            "colore": "Rosso",
+            "foto": [
+              "https://i.imgur.com/5q0QX5k.jpg",
+              "https://i.imgur.com/I6PmWUC.jpg",
+              "https://i.imgur.com/ZQ6VDiy.jpg",
+              "https://i.imgur.com/FHyzgZJ.jpg",
+              "https://i.imgur.com/2sPq3YO.jpg"
+            ],
+            "fotoIndex": 0
+          },
+          {
+            "nome": "Sciarpa Blu",
+            "descrizione": "Sciarpa calda blu fatta a mano.",
+            "prezzo": 18.00,
+            "colore": "Blu",
+            "foto": [
+              "https://i.imgur.com/VFkzYzR.jpg",
+              "https://i.imgur.com/tVk7yyV.jpg",
+              "https://i.imgur.com/o0gK8Xo.jpg",
+              "https://i.imgur.com/14yzG9k.jpg",
+              "https://i.imgur.com/pB9A1V7.jpg"
+            ],
+            "fotoIndex": 0
+          },
+          {
+            "nome": "Cappellino Verde",
+            "descrizione": "Cappellino verde elegante e caldo.",
+            "prezzo": 15.00,
+            "colore": "Verde",
+            "foto": [
+              "https://i.imgur.com/vF44Dcf.jpg",
+              "https://i.imgur.com/QXU2eMa.jpg",
+              "https://i.imgur.com/W8ghENc.jpg",
+              "https://i.imgur.com/3T9Tx3h.jpg",
+              "https://i.imgur.com/5HWVwN8.jpg"
+            ],
+            "fotoIndex": 0
+          }
+          // Puoi aggiungere altri articoli nello stesso formato
         ],
-        carrello: [],
-        emailCliente: ''
+        carrello: []
+      },
+      computed: {
+        totale() {
+          return this.carrello.reduce((sum, item) => sum + item.prezzo, 0);
+        }
+      },
+      watch: {
+        view(val) {
+          if (val === 'carrello' && this.carrello.length > 0) {
+            this.renderPayPal();
+          }
+        },
+        carrello() {
+          if (this.view === 'carrello' && this.carrello.length > 0) {
+            this.renderPayPal();
+          }
+        }
       },
       methods: {
         prevFoto(i) {
-          if (this.articoli[i].fotoIndex === 0) {
-            this.articoli[i].fotoIndex = this.articoli[i].foto.length - 1;
-          } else {
-            this.articoli[i].fotoIndex--;
-          }
+          const art = this.articoli[i];
+          art.fotoIndex = (art.fotoIndex - 1 + art.foto.length) % art.foto.length;
         },
         nextFoto(i) {
-          if (this.articoli[i].fotoIndex === this.articoli[i].foto.length - 1) {
-            this.articoli[i].fotoIndex = 0;
-          } else {
-            this.articoli[i].fotoIndex++;
-          }
+          const art = this.articoli[i];
+          art.fotoIndex = (art.fotoIndex + 1) % art.foto.length;
         },
         aggiungiAlCarrello(articolo) {
-          this.carrello.push(articolo);
+          this.carrello.push({ ...articolo });
           Swal.fire({
             icon: 'success',
             title: 'Aggiunto al carrello',
@@ -155,8 +198,8 @@
           const rimosso = this.carrello.splice(index, 1)[0];
           Swal.fire({
             icon: 'info',
-            title: 'Rimosso',
-            text: rimosso.nome + ' è stato rimosso dal carrello',
+            title: 'Rimosso dal carrello',
+            text: rimosso.nome + ' è stato rimosso!',
             timer: 1500,
             showConfirmButton: false
           });
@@ -164,78 +207,29 @@
         compraSubito(articolo) {
           this.carrello = [articolo];
           this.view = 'carrello';
-          this.inizializzaPayPal();
         },
-        inizializzaPayPal() {
-          // Puliamo eventuale bottone precedente
-          document.getElementById('paypal-button-container').innerHTML = '';
-          if (this.carrello.length === 0) return;
-
-          // Chiediamo la mail al cliente (semplice prompt, si può migliorare)
-          Swal.fire({
-            title: 'Inserisci la tua email',
-            input: 'email',
-            inputPlaceholder: 'tuo@email.com',
-            inputValidator: (value) => {
-              if (!value) return 'Email obbligatoria!';
-              return null;
-            }
-          }).then(result => {
-            if (result.isConfirmed) {
-              this.emailCliente = result.value;
-
-              paypal.Buttons({
-                createOrder: (data, actions) => {
-                  let totale = this.totale.toFixed(2);
-                  return actions.order.create({
-                    purchase_units: [{
-                      amount: { value: totale }
-                    }]
-                  });
-                },
-                onApprove: (data, actions) => {
-                  return actions.order.capture().then(details => {
-                    Swal.fire({
-                      icon: 'success',
-                      title: 'Pagamento completato',
-                      text: `Grazie, ${details.payer.name.given_name}!`,
-                    });
-
-                    // Invia l'ordine al server
-                    fetch('/invia-ordine', {
-                      method: 'POST',
-                      headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify({
-                        carrello: this.carrello,
-                        totale: this.totale,
-                        email: this.emailCliente,
-                        paypalOrderId: data.orderID
-                      })
-                    }).then(res => res.json())
-                      .then(data => {
-                        if(data.success) {
-                          Swal.fire('Ordine ricevuto', 'Ti abbiamo inviato una email di conferma.', 'success');
-                          this.carrello = [];
-                          this.view = 'home';
-                        } else {
-                          Swal.fire('Errore', 'Qualcosa è andato storto, riprova.', 'error');
-                        }
-                      });
-                  });
-                },
-                onError: (err) => {
-                  Swal.fire('Errore', 'Errore nel pagamento: ' + err, 'error');
-                }
-              }).render('#paypal-button-container');
-            } else {
-              this.view = 'home';
-            }
-          });
-        }
-      },
-      computed: {
-        totale() {
-          return this.carrello.reduce((acc, item) => acc + item.prezzo, 0);
+        renderPayPal() {
+          setTimeout(() => {
+            document.getElementById("paypal-button-container").innerHTML = "";
+            paypal.Buttons({
+              createOrder: (data, actions) => {
+                return actions.order.create({
+                  purchase_units: [{
+                    amount: {
+                      value: this.totale.toFixed(2)
+                    }
+                  }]
+                });
+              },
+              onApprove: (data, actions) => {
+                return actions.order.capture().then((details) => {
+                  Swal.fire('Pagamento completato', 'Grazie, ' + details.payer.name.given_name + '!', 'success');
+                  this.carrello = [];
+                  this.view = 'home';
+                });
+              }
+            }).render('#paypal-button-container');
+          }, 100);
         }
       }
     });
