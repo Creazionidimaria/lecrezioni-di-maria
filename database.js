@@ -1,13 +1,26 @@
 const { Sequelize, DataTypes } = require('sequelize');
 
-// Crea il DB SQLite nel file database.sqlite
 const sequelize = new Sequelize({
   dialect: 'sqlite',
-  storage: './database.sqlite',
-  logging: false // disabilita log SQL (opzionale)
+  storage: './database.sqlite'
 });
 
-// Definisci il modello Ordine
+// Modello Cliente
+const Cliente = sequelize.define('Cliente', {
+  nomeCliente: {
+    type: DataTypes.STRING,
+    allowNull: false
+  },
+  emailCliente: {
+    type: DataTypes.STRING,
+    allowNull: false,
+    unique: true
+  }
+}, {
+  freezeTableName: true
+});
+
+// Modello Ordine
 const Ordine = sequelize.define('Ordine', {
   nomeCliente: {
     type: DataTypes.STRING,
@@ -18,17 +31,30 @@ const Ordine = sequelize.define('Ordine', {
     allowNull: false
   },
   prodotti: {
-    type: DataTypes.TEXT, // Salviamo JSON come stringa
+    type: DataTypes.TEXT, // Salviamo array prodotti come JSON stringa
     allowNull: false
   },
   totale: {
     type: DataTypes.FLOAT,
     allowNull: false
-  },
-  dataOrdine: {
-    type: DataTypes.DATE,
-    defaultValue: DataTypes.NOW
   }
+}, {
+  freezeTableName: true
 });
 
-module.exports = { sequelize, Ordine };
+// Modello Utente (opzionale)
+const Utente = sequelize.define('Utente', {
+  nome: {
+    type: DataTypes.STRING,
+    allowNull: false
+  },
+  email: {
+    type: DataTypes.STRING,
+    allowNull: false,
+    unique: true
+  }
+}, {
+  freezeTableName: true
+});
+
+module.exports = { sequelize, Cliente, Ordine, Utente };
