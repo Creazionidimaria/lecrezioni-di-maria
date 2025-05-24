@@ -1,86 +1,48 @@
 const express = require('express');
-const cors = require('cors');
 const bodyParser = require('body-parser');
-const nodemailer = require('nodemailer');
-
-const { sequelize, Ordine } = require('./database');  // importa il DB e modello
+const cors = require('cors');
+const { sequelize, Ordine } = require('./database');
 
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 
 app.use(cors());
 app.use(bodyParser.json());
-app.use(express.static('public')); // se index.html è in ./public
 
-// Connessione e sincronizzazione DB Sequelize
+// Sincronizza DB
 sequelize.sync()
-  .then(() => console.log('DB Sequelize connesso e sincronizzato'))
-  .catch(err => console.error('Errore DB Sequelize:', err));
+  .then(() => console.log('Database sincronizzato'))
+  .catch(err => console.error('Errore sincronizzazione DB:', err));
 
-// Setup nodemailer - usa un account gmail ad esempio
-const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: {
-    user: 'info.mariacreazioni@gmail.com',  // la tua email reale
-    pass: 'empc jqfl uoid mzey'             // password app Google
-  }
-});
-
-// POST per ricevere l'ordine dal client
-app.post('/invia-ordine', async (req, res) => {
+// API per salvare ordine
+app.post('/api/ordini', async (req, res) => {
   try {
-    const { carrello, totale, email, paypalOrderId } = req.body;
+    const { nomeCliente, emailCliente, prodotti, totale } = req.body;
 
-    if (!email || !carrello || carrello.length === 0) {
-      return res.json({ success: false, msg: 'Dati mancanti' });
+    if (!nomeCliente || !emailCliente || !prodotti || !totale) {
+      return res.status(400).json({ message: 'Campi mancanti' });
     }
 
-    const ordineString = JSON.stringify(carrello, null, 2);
-
-    // Salva ordine nel DB usando Sequelize
-    const nuovoOrdine = await Ordine.create({
-      nomeCliente: 'Cliente',  // opzionale se vuoi aggiungere nome
-      emailCliente: email,
-      prodotti: ordineString,
-      totale: parseFloat(totale),
-      dataOrdine: new Date()
+    // prodotti è un array, lo salviamo come stringa JSON
+    const ordine = await Ordine.create({
+      nomeCliente,
+      emailCliente,
+      prodotti: JSON.stringify(prodotti),
+      totale
     });
 
-    // Prepara email a cliente
-    const mailOptionsCliente = {
-      from: 'info.mariacreazioni@gmail.com',
-      to: email,
-      subject: 'Conferma ordine Le Creazioni di Maria',
-      html: `<h2>Grazie per il tuo ordine!</h2>
-             <p>Totale: €${totale.toFixed(2)}</p>
-             <pre>${ordineString}</pre>`
-    };
-
-    // Prepara email a venditore
-    const mailOptionsVenditore = {
-      from: 'info.mariacreazioni@gmail.com',
-      to: 'info.mariacreazioni@gmail.com',
-      subject: 'Nuovo ordine ricevuto',
-      html: `<h2>Nuovo ordine da ${email}</h2>
-             <p>Totale: €${totale.toFixed(2)}</p>
-             <pre>${ordineString}</pre>`
-    };
-
-    // Invia email cliente
-    await transporter.sendMail(mailOptionsCliente);
-
-    // Invia email venditore
-    await transporter.sendMail(mailOptionsVenditore);
-
-    // Risposta positiva al client
-    res.json({ success: true, msg: 'Ordine salvato e email inviate' });
-
+    res.status(201).json({ message: 'Ordine salvato con successo', ordine });
   } catch (error) {
-    console.error('Errore nel POST /invia-ordine:', error);
-    res.json({ success: false, msg: 'Errore interno server' });
+    console.error('Errore salvataggio ordine:', error);
+    res.status(500).json({ message: 'Errore server' });
   }
 });
 
+// Serve index.html e file statici se vuoi (opzionale)
+// app.use(express.static('public'));
+
 app.listen(PORT, () => {
-  console.log(`Server attivo su http://localhost:${PORT}`);
+  console.log(`Server in ascolto su http://localhost:${PORT}`);
 });
+
+
