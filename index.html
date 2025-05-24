@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Le Creazioni di Maria 🧶</title>
+
+  <!-- PayPal SDK -->
+  <script src="https://www.paypal.com/sdk/js?client-id=AW5QKjMfQn0XfqoHuCl-Q9jZgy01EHpo36tYsj8nqEzU0F6V2APuMg7eIRTi-EkF8Rqk2HRnGpKH6d87&currency=EUR"></script>
+
+  <!-- Vue.js -->
+  <script src="https://cdn.jsdelivr.net/npm/vue@2"></script>
+  <!-- SweetAlert2 -->
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <!-- TailwindCSS -->
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+
+  <style>
+    .carousel {
+      position: relative;
+      width: 200px;
+      height: 200px;
+      overflow: hidden;
+      margin-bottom: 1rem;
+    }
+    .carousel img {
+      width: 200px;
+      height: 200px;
+      object-fit: cover;
+      border-radius: 0.5rem;
+    }
+    .arrow {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      background: rgba(0,0,0,0.5);
+      color: white;
+      padding: 0.2rem 0.5rem;
+      cursor: pointer;
+      user-select: none;
+      font-weight: bold;
+      border-radius: 0.25rem;
+    }
+    .arrow.left { left: 0.3rem; }
+    .arrow.right { right: 0.3rem; }
+  </style>
+</head>
+<body class="bg-pink-50 font-sans">
+  <div id="app" class="p-4 max-w-5xl mx-auto">
+
+    <nav class="bg-pink-200 p-4 rounded-lg shadow mb-6 flex justify-between items-center">
+      <div class="text-2xl font-bold">🧵 Le Creazioni di Maria</div>
+      <div>
+        <button class="mr-4 font-semibold" @click="view='home'">🏠 Home</button>
+        <button class="mr-4 font-semibold" @click="view='carrello'">🛒 Carrello ({{ carrello.length }})</button>
+        <button class="font-semibold" @click="view='descrizione'">📜 Descrizione</button>
+      </div>
+    </nav>
+
+    <section v-if="view==='descrizione'">
+      <h2 class="text-3xl font-bold mb-4">Descrizione</h2>
+      <p class="text-lg">Benvenuti nel negozio di Maria! Qui troverai borse, sciarpe e cappellini fatti all'uncinetto con tanto amore. 🧶💖</p>
+    </section>
+
+    <section v-if="view==='home'">
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div v-for="(articolo, index) in articoli" :key="index" class="bg-white p-6 rounded-lg shadow">
+          <div class="carousel">
+            <img :src="articolo.foto[articolo.fotoIndex]" :alt="articolo.nome" />
+            <span class="arrow left" @click="prevFoto(index)">&#8592;</span>
+            <span class="arrow right" @click="nextFoto(index)">&#8594;</span>
+          </div>
+          <h3 class="text-xl font-semibold mb-2">👜 {{ articolo.nome }}</h3>
+          <p>{{ articolo.descrizione }}</p>
+          <p class="mt-2 font-semibold">💶 Prezzo: {{ articolo.prezzo.toFixed(2) }} €</p>
+          <p class="mt-1 font-semibold">🎨 Colore: <span :style="{ color: articolo.colore.toLowerCase() }">{{ articolo.colore }}</span></p>
+          <div class="mt-4 flex gap-3">
+            <button class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600" @click="aggiungiAlCarrello(articolo)">➕ Aggiungi</button>
+            <button class="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700" @click="compraSubito(articolo)">💳 Compra</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section v-if="view==='carrello'">
+      <h2 class="text-3xl font-bold mb-4">🛍️ Il tuo carrello</h2>
+      <div v-if="carrello.length === 0" class="text-lg">Il carrello è vuoto.</div>
+      <div v-else>
+        <ul>
+          <li v-for="(item, index) in carrello" :key="index" class="border-b py-2 flex justify-between items-center">
+            <div>
+              {{ item.nome }} - {{ item.prezzo.toFixed(2) }} € - Colore: {{ item.colore }}
+            </div>
+            <button class="text-red-600 hover:text-red-800 font-bold" @click="rimuoviDalCarrello(index)">❌ Rimuovi</button>
+          </li>
+        </ul>
+        <p class="mt-4 text-xl font-semibold">Totale: {{ totale.toFixed(2) }} €</p>
+        <div id="paypal-button-container" class="mt-6"></div>
+      </div>
+    </section>
+
+    <footer class="mt-10 bg-pink-200 p-4 rounded-lg text-center text-sm">
+      <p>📞 Tel: +39 3398952949 | ✉️ Email: info.mariacreazioni@email.com</p>
+      <p>💳 Pagamenti accettati: Mybank,PayPal, Carta di credito</p>
+    </footer>
+
+  </div>
+
+  <script>
+    new Vue({
+      el: '#app',
+      data: {
+        view: 'home',
+        articoli: [
+          { nome: 'Borsa Rossa', descrizione: 'Borsa fatta a mano in lana rossa, perfetta per ogni occasione.', prezzo: 0.01, colore: 'Rosso', foto: ['download.jpg', 'immagine2.jpg', 'immagine3.jpg', 'immagine4.jpg', 'immagine5.jpg'], fotoIndex: 0 },
+          { nome: 'Sciarpa Blu', descrizione: 'Sciarpa calda e morbida, colore blu intenso.', prezzo: 0.01, colore: 'Blu', foto: ['immagine1.jpg', 'immagine2.jpg', 'immagine3.jpg', 'immagine4.jpg', 'immagine5.jpg'], fotoIndex: 0 },
+          { nome: 'Cappellino Verde', descrizione: 'Cappellino elegante e caldo, colore verde.', prezzo: 15, colore: 'Verde', foto: ['immagine1.jpg', 'immagine2.jpg', 'immagine3.jpg', 'immagine4.jpg', 'immagine5.jpg'], fotoIndex: 0 },
+          { nome: 'Borsa Gialla', descrizione: 'Borsa estiva color giallo vivace.', prezzo: 22, colore: 'Giallo', foto: ['immagine1.jpg', 'immagine2.jpg', 'immagine3.jpg', 'immagine4.jpg', 'immagine5.jpg'], fotoIndex: 0 },
+          { nome: 'Sciarpa Nera', descrizione: 'Sciarpa classica nera, molto versatile.', prezzo: 18, colore: 'Nero', foto: ['immagine1.jpg', 'immagine2.jpg', 'immagine3.jpg', 'immagine4.jpg', 'immagine5.jpg'], fotoIndex: 0 },
+          { nome: 'Cappellino Rosso', descrizione: 'Cappellino color rosso vivace e caldo.', prezzo: 16, colore: 'Rosso', foto: ['immagine1.jpg', 'immagine2.jpg', 'immagine3.jpg', 'immagine4.jpg', 'immagine5.jpg'], fotoIndex: 0 },
+          { nome: 'Borsa Blu', descrizione: 'Borsa in blu elegante e resistente.', prezzo: 25, colore: 'Blu', foto: ['immagine1.jpg', 'immagine2.jpg', 'immagine3.jpg', 'immagine4.jpg', 'immagine5.jpg'], fotoIndex: 0 },
+          { nome: 'Sciarpa Verde', descrizione: 'Sciarpa verde con motivo a trecce.', prezzo: 14, colore: 'Verde', foto: ['immagine1.jpg', 'immagine2.jpg', 'immagine3.jpg', 'immagine4.jpg', 'immagine5.jpg'], fotoIndex: 0 },
+          { nome: 'Cappellino Nero', descrizione: 'Cappellino nero semplice e sobrio.', prezzo: 13, colore: 'Nero', foto: ['immagine1.jpg', 'immagine2.jpg', 'immagine3.jpg', 'immagine4.jpg', 'immagine5.jpg'], fotoIndex: 0 },
+          { nome: 'Borsa Rosa', descrizione: 'Borsa rosa delicata e femminile.', prezzo: 20, colore: 'Rosa', foto: ['immagine1.jpg', 'immagine2.jpg', 'immagine3.jpg', 'immagine4.jpg', 'immagine5.jpg'], fotoIndex: 0 },
+        ],
+        carrello: [],
+        emailCliente: ''
+      },
+      methods: {
+        prevFoto(i) {
+          if (this.articoli[i].fotoIndex === 0) {
+            this.articoli[i].fotoIndex = this.articoli[i].foto.length - 1;
+          } else {
+            this.articoli[i].fotoIndex--;
+          }
+        },
+        nextFoto(i) {
+          if (this.articoli[i].fotoIndex === this.articoli[i].foto.length - 1) {
+            this.articoli[i].fotoIndex = 0;
+          } else {
+            this.articoli[i].fotoIndex++;
+          }
+        },
+        aggiungiAlCarrello(articolo) {
+          this.carrello.push(articolo);
+          Swal.fire({
+            icon: 'success',
+            title: 'Aggiunto al carrello',
+            text: articolo.nome + ' è stato aggiunto!',
+            timer: 1500,
+            showConfirmButton: false
+          });
+        },
+        rimuoviDalCarrello(index) {
+          const rimosso = this.carrello.splice(index, 1)[0];
+          Swal.fire({
+            icon: 'info',
+            title: 'Rimosso',
+            text: rimosso.nome + ' è stato rimosso dal carrello',
+            timer: 1500,
+            showConfirmButton: false
+          });
+        },
+        compraSubito(articolo) {
+          this.carrello = [articolo];
+          this.view = 'carrello';
+          this.inizializzaPayPal();
+        },
+        inizializzaPayPal() {
+          // Puliamo eventuale bottone precedente
+          document.getElementById('paypal-button-container').innerHTML = '';
+          if (this.carrello.length === 0) return;
+
+          // Chiediamo la mail al cliente (semplice prompt, si può migliorare)
+          Swal.fire({
+            title: 'Inserisci la tua email',
+            input: 'email',
+            inputPlaceholder: 'tuo@email.com',
+            inputValidator: (value) => {
+              if (!value) return 'Email obbligatoria!';
+              return null;
+            }
+          }).then(result => {
+            if (result.isConfirmed) {
+              this.emailCliente = result.value;
+
+              paypal.Buttons({
+                createOrder: (data, actions) => {
+                  let totale = this.totale.toFixed(2);
+                  return actions.order.create({
+                    purchase_units: [{
+                      amount: { value: totale }
+                    }]
+                  });
+                },
+                onApprove: (data, actions) => {
+                  return actions.order.capture().then(details => {
+                    Swal.fire({
+                      icon: 'success',
+                      title: 'Pagamento completato',
+                      text: `Grazie, ${details.payer.name.given_name}!`,
+                    });
+
+                    // Invia l'ordine al server
+                    fetch('/invia-ordine', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({
+                        carrello: this.carrello,
+                        totale: this.totale,
+                        email: this.emailCliente,
+                        paypalOrderId: data.orderID
+                      })
+                    }).then(res => res.json())
+                      .then(data => {
+                        if(data.success) {
+                          Swal.fire('Ordine ricevuto', 'Ti abbiamo inviato una email di conferma.', 'success');
+                          this.carrello = [];
+                          this.view = 'home';
+                        } else {
+                          Swal.fire('Errore', 'Qualcosa è andato storto, riprova.', 'error');
+                        }
+                      });
+                  });
+                },
+                onError: (err) => {
+                  Swal.fire('Errore', 'Errore nel pagamento: ' + err, 'error');
+                }
+              }).render('#paypal-button-container');
+            } else {
+              this.view = 'home';
+            }
+          });
+        }
+      },
+      computed: {
+        totale() {
+          return this.carrello.reduce((acc, item) => acc + item.prezzo, 0);
+        }
+      }
+    });
+  </script>
+</body>
+</html>
