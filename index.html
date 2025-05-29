@@ -213,108 +213,105 @@ new Vue({
       });
     },
     compraSubito(articolo) {
-      this.carrello = [{...articolo}];
-      this.view = 'carrello';
-      this.$nextTick(() => {
-        this.renderPayPalButton();
+  this.carrello = [{ ...articolo }];
+  this.view = 'carrello';
+  this.$nextTick(() => {
+    this.renderPayPalButton();
+  });
+},
+renderPayPalButton() {
+  const container = document.getElementById('paypal-button-container');
+  container.innerHTML = '';
+
+  if (this.carrello.length === 0 || !this.nomeCliente.trim() || !this.emailCliente.trim()) {
+    return; // Non mostra il bottone PayPal se dati mancanti
+  }
+
+  paypal.Buttons({
+    style: {
+      shape: 'rect',
+      color: 'gold',
+      layout: 'vertical',
+      label: 'paypal'
+    },
+    createOrder: (data, actions) => {
+      return actions.order.create({
+        purchase_units: [{
+          amount: {
+            currency_code: 'EUR',
+            value: this.totale.toFixed(2)
+          },
+          description: 'Acquisto da Le Creazioni di Maria'
+        }]
       });
     },
-    renderPayPalButton() {
-      // Pulisce container
-      const container = document.getElementById('paypal-button-container');
-      container.innerHTML = '';
-
-      if (this.carrello.length === 0 || !this.nomeCliente.trim() || !this.emailCliente.trim()) {
-        return; // Non mostra il bottone PayPal se dati mancanti
-      }
-
-      paypal.Buttons({
-        style: {
-          shape: 'rect',
-          color: 'gold',
-          layout: 'vertical',
-          label: 'paypal'
-        },
-        createOrder: (data, actions) => {
-          return actions.order.create({
-            purchase_units: [{
-              amount: {
-                currency_code: 'EUR',
-                value: this.totale.toFixed(2)
-              },
-              description: 'Acquisto da Le Creazioni di Maria'
-            }]
+    onApprove: (data, actions) => {
+      return actions.order.capture().then(details => {
+        fetch('/api/ordini', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            nomeCliente: this.nomeCliente,
+            emailCliente: this.emailCliente,
+            carrello: this.carrello,
+            totale: this.totale.toFixed(2),
+            paypalOrderId: data.orderID,
+            payerName: details.payer.name.given_name + ' ' + details.payer.name.surname,
+            payerEmail: details.payer.email_address
+          })
+        })
+        .then(async res => {
+          if (!res.ok) {
+            const errText = await res.text();
+            throw new Error(`Errore server: ${res.status} - ${errText}`);
+          }
+          return res.json();
+        })
+        .then(() => {
+          Swal.fire({
+            icon: 'success',
+            title: 'Pagamento effettuato!',
+            html: `<p>Grazie per il tuo acquisto, ${this.nomeCliente}!</p>`,
+            timer: 3000,
+            showConfirmButton: false
           });
-        },
-        onApprove: (data, actions) => {
-          return actions.order.capture().then(details => {
-            // Invio ordine al server
-            fetch('/api/ordini', {
-              method: 'POST',
-              headers: {'Content-Type': 'application/json'},
-              body: JSON.stringify({
-                nomeCliente: this.nomeCliente,
-                emailCliente: this.emailCliente,
-                carrello: this.carrello,
-                totale: this.totale.toFixed(2),
-                paypalOrderId: data.orderID,
-                payerName: details.payer.name.given_name + ' ' + details.payer.name.surname,
-                payerEmail: details.payer.email_address
-              })
-            }).then(res => {
-              if (res.ok) {
-                Swal.fire({
-                  icon: 'success',
-                  title: 'Pagamento effettuato!',
-                  html: `<p>Grazie per il tuo acquisto, ${this.nomeCliente}!</p>`,
-                  timer: 3000,
-                  showConfirmButton: false
-                });
-                this.carrello = [];
-                this.nomeCliente = '';
-                this.emailCliente = '';
-                this.view = 'home';
-                container.innerHTML = '';
-              } else {
-                Swal.fire({
-                  icon: 'error',
-                  title: 'Errore nell\'invio ordine',
-                  text: 'Contatta il supporto.',
-                });
-              }
-            }).catch(() => {
-              Swal.fire({
-                icon: 'error',
-                title: 'Errore di rete',
-                text: 'Impossibile inviare ordine.',
-              });
-            });
-          });
-        },
-        onError: err => {
+          this.carrello = [];
+          this.nomeCliente = '';
+          this.emailCliente = '';
+          this.view = 'home';
+          container.innerHTML = '';
+        })
+        .catch(err => {
           Swal.fire({
             icon: 'error',
-            title: 'Errore PayPal',
-            text: err.toString()
+            title: 'Errore nell\'invio ordine',
+            text: err.message || 'Contatta il supporto.'
           });
-        }
-      }).render('#paypal-button-container');
+        });
+      });
+    },
+    onError: err => {
+      Swal.fire({
+        icon: 'error',
+        title: 'Errore PayPal',
+        text: err.toString()
+      });
     }
+  }).render('#paypal-button-container');
+}
+},
+watch: {
+  carrello() {
+    this.renderPayPalButton();
   },
-  watch: {
-    carrello() {
-      this.renderPayPalButton();
-    },
-    nomeCliente() {
-      this.renderPayPalButton();
-    },
-    emailCliente() {
-      this.renderPayPalButton();
-    }
+  nomeCliente() {
+    this.renderPayPalButton();
+  },
+  emailCliente() {
+    this.renderPayPalButton();
   }
+}
 });
 </script>
 </body>
 </html>
-
-
