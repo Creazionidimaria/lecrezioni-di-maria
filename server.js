@@ -1,83 +1,94 @@
 const express = require('express');
-const bodyParser = require('body-parser');
 const cors = require('cors');
-const { sequelize, Cliente, Ordine, Utente } = require('./database');
+const bodyParser = require('body-parser');
+const XLSX = require('xlsx');
+const fs = require('fs');
+const path = require('path');
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const port = 3000;
 
 app.use(cors());
 app.use(bodyParser.json());
 
-// Sincronizza DB (crea tabelle se non ci sono)
-sequelize.sync()
-  .then(() => console.log('Database sincronizzato'))
-  .catch(err => console.error('Errore sincronizzazione DB:', err));
+const fileExcel = './ordini.xlsx';
+const fileJson = './ordini.json';
 
-// API per salvare cliente (se vuoi inserirlo direttamente)
-app.post('/api/clienti', async (req, res) => {
+// 🔹 Funzione per creare Excel se non esiste
+function creaFileExcelSeNonEsiste() {
+  if (!fs.existsSync(fileExcel)) {
+    const ws = XLSX.utils.json_to_sheet([]);
+    const wb = XLSX.utils.book_new();
+    const headers = ['Codice Ordine', 'Nome', 'Cognome', 'Email', 'Articoli', 'Totale', 'Data Ordine'];
+    XLSX.utils.sheet_add_aoa(ws, [headers], { origin: 'A1' });
+    XLSX.utils.book_append_sheet(wb, ws, 'Ordini');
+    XLSX.writeFile(wb, fileExcel);
+  }
+}
+
+// 🔹 Genera codice casuale a 5 cifre
+function generaCodiceOrdine() {
+  return Math.floor(10000 + Math.random() * 90000).toString();
+}
+
+// 🔹 Salva ordine in JSON
+function salvaOrdineJson(ordine) {
+  let ordini = [];
+  if (fs.existsSync(fileJson)) {
+    const dati = fs.readFileSync(fileJson);
+    ordini = JSON.parse(dati);
+  }
+  ordini.push(ordine);
+  fs.writeFileSync(fileJson, JSON.stringify(ordini, null, 2));
+}
+
+// 🔹 Endpoint per ricevere ordine
+app.post('/api/ordine', (req, res) => {
+  const { nome, cognome, email, prodotti, totale } = req.body;
+
+  if (!nome || !cognome || !email || !prodotti || !totale) {
+    return res.status(400).send('Dati ordine incompleti');
+  }
+
+  const codiceOrdine = generaCodiceOrdine(); // Codice a 5 cifre
+  const descrizioneProdotti = prodotti.map(p =>
+    `${p.nome} x${p.quantita || 1}${p.colore ? ' (' + p.colore + ')' : ''}`
+  ).join(', ');
+  const dataOrdine = new Date().toISOString();
+
+  const ordine = {
+    'Codice Ordine': codiceOrdine,
+    Nome: nome,
+    Cognome: cognome,
+    Email: email,
+    Articoli: descrizioneProdotti,
+    Totale: totale,
+    'Data Ordine': dataOrdine
+  };
+
   try {
-    const { nomeCliente, emailCliente } = req.body;
-    if (!nomeCliente || !emailCliente) {
-      return res.status(400).json({ message: 'Nome o email mancanti' });
-    }
+    creaFileExcelSeNonEsiste();
 
-    // Prova a creare, se email esiste risponde errore
-    const cliente = await Cliente.create({ nomeCliente, emailCliente });
-    res.status(201).json({ message: 'Cliente salvato con successo', cliente });
+    const wb = XLSX.readFile(fileExcel);
+    const ws = wb.Sheets['Ordini'];
+    const dati = XLSX.utils.sheet_to_json(ws);
+    dati.push(ordine);
+
+    const nuovoWs = XLSX.utils.json_to_sheet(dati, { header: ['Codice Ordine', 'Nome', 'Cognome', 'Email', 'Articoli', 'Totale', 'Data Ordine'] });
+    wb.Sheets['Ordini'] = nuovoWs;
+    XLSX.writeFile(wb, fileExcel);
+
+    salvaOrdineJson(ordine); // anche su JSON
+
+    res.status(200).send({ messaggio: 'Ordine salvato con successo', codiceOrdine });
   } catch (error) {
-    console.error('Errore salvataggio cliente:', error);
-    res.status(500).json({ message: 'Errore server' });
+    console.error('Errore:', error);
+    res.status(500).send('Errore durante il salvataggio ordine');
   }
 });
 
-// API per salvare ordine
-app.post('/api/ordini', async (req, res) => {
-  try {
-    const { nomeCliente, emailCliente, prodotti, totale } = req.body;
-
-    if (!nomeCliente || !emailCliente || !prodotti || !totale) {
-      return res.status(400).json({ message: 'Campi mancanti' });
-    }
-
-    // Salvo ordine
-    const ordine = await Ordine.create({
-      nomeCliente,
-      emailCliente,
-      prodotti: JSON.stringify(prodotti),
-      totale
-    });
-
-    // Controllo se cliente esiste già, altrimenti lo creo
-    let cliente = await Cliente.findOne({ where: { emailCliente } });
-    if (!cliente) {
-      cliente = await Cliente.create({ nomeCliente, emailCliente });
-    }
-
-    res.status(201).json({ message: 'Ordine salvato con successo', ordine });
-  } catch (error) {
-    console.error('Errore salvataggio ordine:', error);
-    res.status(500).json({ message: 'Errore server' });
-  }
+// 🔹 Avvia server
+app.listen(port, () => {
+  console.log(`✅ Server attivo su http://localhost:${port}`);
 });
 
-// API per salvare utente
-app.post('/api/utenti', async (req, res) => {
-  try {
-    const { nome, email } = req.body;
-
-    if (!nome || !email) {
-      return res.status(400).json({ message: 'Campi mancanti' });
-    }
-
-    const utente = await Utente.create({ nome, email });
-    res.status(201).json({ message: 'Utente salvato con successo', utente });
-  } catch (error) {
-    console.error('Errore salvataggio utente:', error);
-    res.status(500).json({ message: 'Errore server' });
-  }
-});
-
-app.listen(PORT, () => {
-  console.log(`Server in ascolto su http://localhost:${PORT}`);
-});
